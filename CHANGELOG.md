@@ -2,7 +2,7 @@
 
 ## Version 0.8.7
 
-### 中文
+### 中文(100k下载！)
 
 * [+] 新增了一些 RPC 调用日志(在AntiCheat.log中查看他们！)
 * [/] 修复了客户端使用反作弊也会生成日志内容的问题
@@ -13,7 +13,7 @@
 * [/] 修复击杀管家与其他模组的兼容性问题
 * [+] 新增韩文本地化 @P-Asta (如果你想固定语言至韩文，请手动设置 `locales\localization_cfg.json` 文件,将 `current_language` 改为 `ko_KR`)
 
-### English
+### English(100k Donwnloads!)
 
 * [+] Added some RPC call logs (check them in AntiCheat.log!)
 * [/] Fixed an issue where the client would generate log content even when using anti-cheat

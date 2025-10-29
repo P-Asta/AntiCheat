@@ -951,16 +951,16 @@ namespace AntiCheat
             //return KillPlayerServerRpc(target, reader, rpcParams, "CentipedeAI.ClingToPlayerServerRpc");
         }
 
-        /// <summary>
-        /// Prefix RadMechAI.GrabPlayerServerRpc
-        /// </summary>
-        [HarmonyPatch(typeof(RadMechAI), "__rpc_handler_3707286996")]
-        [HarmonyPrefix]
-        [HarmonyWrapSafe]
-        public static bool __rpc_handler_3707286996(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
-        {
-            return KillPlayerServerRpc(target, reader, rpcParams, "RadMechAI.GrabPlayerServerRpc");
-        }
+        ///// <summary>
+        ///// Prefix RadMechAI.GrabPlayerServerRpc
+        ///// </summary>
+        //[HarmonyPatch(typeof(RadMechAI), "__rpc_handler_3707286996")]
+        //[HarmonyPrefix]
+        //[HarmonyWrapSafe]
+        //public static bool __rpc_handler_3707286996(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
+        //{
+        //    return KillPlayerServerRpc(target, reader, rpcParams, "RadMechAI.GrabPlayerServerRpc");
+        //}
 
         ///// <summary>
         ///// Prefix CaveDwellerAI.GrabPlayerServerRpc
@@ -1601,6 +1601,7 @@ namespace AntiCheat
             }
             else if (StartOfRound.Instance.KickedClientIds.Contains(p.playerSteamId))//如果被踢
             {
+                Task.Delay(-100);
                 NetworkManager.Singleton.DisconnectClient(rpcParams.Server.Receive.SenderClientId);
                 return false;
             }
