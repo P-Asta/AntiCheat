@@ -1767,16 +1767,34 @@ namespace AntiCheat
                         {
                             LogInfo(p, "PlayerControllerB.GrabObjectServerRpc", $"itemName:{g.itemProperties.itemName}", $"heldByPlayerOnServer:{(g.heldByPlayerOnServer ? g.playerHeldBy?.playerUsername : "false")}", $"Distance:{Vector3.Distance(p.transform.position, g.transform.position)}");
                             bool ban = false;
+                            GrabbableObject currentSlotItem = null;
+                            if (p.currentItemSlot >= 0 && p.currentItemSlot < p.ItemSlots.Length)
+                            {
+                                currentSlotItem = p.ItemSlots[p.currentItemSlot];
+                            }
+                            var holdingTwoHand =
+                                (p.currentlyHeldObjectServer != null && p.currentlyHeldObjectServer.itemProperties.twoHanded) ||
+                                (currentSlotItem != null && currentSlotItem.itemProperties.twoHanded);
+                            var holdingJetpack =
+                                (p.currentlyHeldObjectServer is JetpackItem) ||
+                                (currentSlotItem is JetpackItem);
+                            var oneHandWhileHoldingTwoHandDetected = holdingTwoHand && !g.itemProperties.twoHanded;
+                            var heldItemName = p.currentlyHeldObjectServer != null
+                                ? p.currentlyHeldObjectServer.itemProperties.itemName
+                                : (currentSlotItem != null ? currentSlotItem.itemProperties.itemName : "unknown");
+                            var jetpackGrabTwoHandDetected = holdingJetpack && g.itemProperties.twoHanded && !hastwohand;
                             var twoHandDetected =
+                                oneHandWhileHoldingTwoHandDetected ||
                                 (g.itemProperties.twoHanded && hastwohand) ||
                                 (g.itemProperties.twoHanded && jetpack) ||
                                 (hastwohand && jetpack);
                             if (twoHandDetected)
                             {
-                                if (Core.AntiCheat.GrabObject_SendLog.Value)
+                                if (Core.AntiCheat.GrabObject_SendLog.Value && !jetpackGrabTwoHandDetected)
                                 {
                                     ShowMessage(locale.Msg_GetString("GrabObject_TwoHand", new Dictionary<string, string>() {
                                         { "{player}",p.playerUsername },
+                                        { "{heldItemName}",heldItemName },
                                         { "{itemName}",g.itemProperties.itemName },
                                         { "{hasTwoHand}",hastwohand.ToString() },
                                         { "{jetpack}",jetpack.ToString() }

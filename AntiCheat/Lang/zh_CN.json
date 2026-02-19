@@ -77,7 +77,7 @@
     "GrabObject": "检测到玩家 {player} 隔空取物！(玩家坐标：{player_position}|物品坐标：{object_position})",
     "GrabObject_BeltBag": "检测到玩家 {player} 尝试用腰包放入受限物品！(物品：{itemName})",
     "GrabObject_MoreSlot": "检测到玩家 {player} 在背包已满状态下尝试拾取物品！(物品：{itemName})",
-    "GrabObject_TwoHand": "检测到玩家 {player} 触发双手拾取限制！(物品：{itemName}，已有双手：{hasTwoHand}，喷气背包：{jetpack})",
+    "GrabObject_TwoHand": "检测到玩家 {player} 触发双手拾取限制！(手持：{heldItemName}，拾取：{itemName}，已有双手：{hasTwoHand}，喷气背包：{jetpack})",
     "Health_Recover": "检测到玩家 {player} 回复生命值({hp})！",
     "InfiniteAmmo": "检测到玩家 {player} 正使用无限子弹！",
     "Invisibility": "检测到玩家 {player} 坐标异常！(玩家坐标：{player_position})",

@@ -50,7 +50,12 @@ if exist "%langSourceDir%" (
 set "zipPath=%solutionDir%%projectName%.zip"
 if exist "%zipPath%" del /f "%zipPath%" >nul 2>&1
 
-powershell -NoProfile -Command "Compress-Archive -Path '%tempDir%\*' -DestinationPath '%zipPath%' -Force" >nul
+set "PWSH_EXE=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
+if exist "%PWSH_EXE%" (
+  "%PWSH_EXE%" -NoProfile -Command "Compress-Archive -Path '%tempDir%\*' -DestinationPath '%zipPath%' -Force" >nul
+) else (
+  pwsh -NoProfile -Command "Compress-Archive -Path '%tempDir%\*' -DestinationPath '%zipPath%' -Force" >nul
+)
 set "rc=%ERRORLEVEL%"
 
 rmdir /s /q "%tempDir%" >nul 2>&1

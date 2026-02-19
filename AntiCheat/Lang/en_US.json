@@ -77,7 +77,7 @@
         "GrabObject": "{player} was detected grabbing objects from too far away! (Player coordinates: {player_position}|Item coordinates: {object_position})",
         "GrabObject_BeltBag": "{player} attempted to use belt bag on restricted item! (item: {itemName})",
         "GrabObject_MoreSlot": "{player} attempted to grab an item with full inventory! (item: {itemName})",
-        "GrabObject_TwoHand": "{player} triggered two-handed grab restriction! (item: {itemName}, hasTwoHand: {hasTwoHand}, jetpack: {jetpack})",
+        "GrabObject_TwoHand": "{player} triggered two-handed grab restriction! (holding: {heldItemName}, grabbing: {itemName}, hasTwoHand: {hasTwoHand}, jetpack: {jetpack})",
         "Health_Recover": "{player} was detected regenerating health ({hp})!",
         "InfiniteAmmo": "{player} was detected using infinite ammo weapon!",
         "Invisibility": "{player} was detected to be invisible! (Player coordinates: {player_position})",
