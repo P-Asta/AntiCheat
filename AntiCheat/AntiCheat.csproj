@@ -1,0 +1,155 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>AntiCheat</AssemblyName>
+    <RootNamespace>AntiCheat</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <DebugType>portable</DebugType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <RunPack>true</RunPack>
+  </PropertyGroup>
+
+  <!--
+    Build requirements (set these MSBuild properties):
+      -p:LC_MANAGED_DIR="...\Lethal Company_Data\Managed"
+      -p:BEPINEX_CORE_DIR="...\BepInEx\core"
+  -->
+  <PropertyGroup>
+    <LC_MANAGED_DIR Condition="'$(LC_MANAGED_DIR)'==''">$(LC_MANAGED_DIR)</LC_MANAGED_DIR>
+    <BEPINEX_CORE_DIR Condition="'$(BEPINEX_CORE_DIR)'==''">$(BEPINEX_CORE_DIR)</BEPINEX_CORE_DIR>
+
+    <!-- Also support user-friendly property names -->
+    <LC_MANAGED_DIR Condition="'$(LC_MANAGED_DIR)'=='' and '$(Managed)'!=''">$(Managed)</LC_MANAGED_DIR>
+    <BEPINEX_CORE_DIR Condition="'$(BEPINEX_CORE_DIR)'=='' and '$(BepInExCore)'!=''">$(BepInExCore)</BEPINEX_CORE_DIR>
+
+    <RepoRoot>$(MSBuildProjectDirectory)\..\</RepoRoot>
+
+    <SteamworksAssemblyPath Condition="Exists('$(LC_MANAGED_DIR)\Facepunch.Steamworks.Win64.dll')">$(LC_MANAGED_DIR)\Facepunch.Steamworks.Win64.dll</SteamworksAssemblyPath>
+    <SteamworksAssemblyPath Condition="'$(SteamworksAssemblyPath)'=='' and Exists('$(LC_MANAGED_DIR)\Facepunch.Steamworks.dll')">$(LC_MANAGED_DIR)\Facepunch.Steamworks.dll</SteamworksAssemblyPath>
+
+    <NetcodeFacepunchTransportPath Condition="Exists('$(LC_MANAGED_DIR)\Netcode.Transports.Facepunch.dll')">$(LC_MANAGED_DIR)\Netcode.Transports.Facepunch.dll</NetcodeFacepunchTransportPath>
+    <NetcodeFacepunchTransportPath Condition="'$(NetcodeFacepunchTransportPath)'=='' and Exists('$(LC_MANAGED_DIR)\Unity.Netcode.Transports.Facepunch.dll')">$(LC_MANAGED_DIR)\Unity.Netcode.Transports.Facepunch.dll</NetcodeFacepunchTransportPath>
+    <NetcodeFacepunchTransportPath Condition="'$(NetcodeFacepunchTransportPath)'=='' and Exists('$(LC_MANAGED_DIR)\Facepunch Transport for Netcode for GameObjects.dll')">$(LC_MANAGED_DIR)\Facepunch Transport for Netcode for GameObjects.dll</NetcodeFacepunchTransportPath>
+
+    <TextMeshProPath Condition="Exists('$(LC_MANAGED_DIR)\Unity.TextMeshPro.dll')">$(LC_MANAGED_DIR)\Unity.TextMeshPro.dll</TextMeshProPath>
+    <TextMeshProPath Condition="'$(TextMeshProPath)'=='' and Exists('$(LC_MANAGED_DIR)\Unity.TextMeshPro.dll')">$(LC_MANAGED_DIR)\Unity.TextMeshPro.dll</TextMeshProPath>
+
+    <UnityNetcodeRuntimePath Condition="Exists('$(LC_MANAGED_DIR)\Unity.Netcode.Runtime.dll')">$(LC_MANAGED_DIR)\Unity.Netcode.Runtime.dll</UnityNetcodeRuntimePath>
+    <UnityNetcodeRuntimePath Condition="'$(UnityNetcodeRuntimePath)'=='' and Exists('$(LC_MANAGED_DIR)\Unity.Netcode.dll')">$(LC_MANAGED_DIR)\Unity.Netcode.dll</UnityNetcodeRuntimePath>
+  </PropertyGroup>
+
+  <Target Name="ValidateExternalPaths" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(LC_MANAGED_DIR)'==''" Text="LC_MANAGED_DIR is not set. Example: -p:LC_MANAGED_DIR=&quot;C:\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed&quot;" />
+    <Error Condition="'$(BEPINEX_CORE_DIR)'==''" Text="BEPINEX_CORE_DIR is not set. Example: -p:BEPINEX_CORE_DIR=&quot;C:\Steam\steamapps\common\Lethal Company\BepInEx\core&quot;" />
+    <Error Condition="!Exists('$(LC_MANAGED_DIR)')" Text="LC_MANAGED_DIR does not exist: $(LC_MANAGED_DIR)" />
+    <Error Condition="!Exists('$(BEPINEX_CORE_DIR)')" Text="BEPINEX_CORE_DIR does not exist: $(BEPINEX_CORE_DIR)" />
+
+    <Error Condition="!Exists('$(BEPINEX_CORE_DIR)\BepInEx.dll')" Text="Missing BepInEx.dll at: $(BEPINEX_CORE_DIR)\BepInEx.dll" />
+    <Error Condition="!Exists('$(BEPINEX_CORE_DIR)\0Harmony.dll')" Text="Missing 0Harmony.dll at: $(BEPINEX_CORE_DIR)\0Harmony.dll" />
+
+    <Error Condition="!Exists('$(LC_MANAGED_DIR)\Assembly-CSharp.dll')" Text="Missing Assembly-CSharp.dll at: $(LC_MANAGED_DIR)\Assembly-CSharp.dll" />
+    <Error Condition="!Exists('$(LC_MANAGED_DIR)\UnityEngine.CoreModule.dll')" Text="Missing UnityEngine.CoreModule.dll at: $(LC_MANAGED_DIR)\UnityEngine.CoreModule.dll" />
+    <Error Condition="!Exists('$(LC_MANAGED_DIR)\Unity.Collections.dll')" Text="Missing Unity.Collections.dll at: $(LC_MANAGED_DIR)\Unity.Collections.dll" />
+    <Error Condition="!Exists('$(LC_MANAGED_DIR)\Newtonsoft.Json.dll')" Text="Missing Newtonsoft.Json.dll at: $(LC_MANAGED_DIR)\Newtonsoft.Json.dll" />
+
+    <Error Condition="'$(UnityNetcodeRuntimePath)'==''" Text="Unity Netcode assembly not found. Expected Unity.Netcode.Runtime.dll or Unity.Netcode.dll in: $(LC_MANAGED_DIR)" />
+    <Error Condition="'$(SteamworksAssemblyPath)'==''" Text="Steamworks assembly not found. Expected Facepunch.Steamworks.Win64.dll or Facepunch.Steamworks.dll in: $(LC_MANAGED_DIR)" />
+    <Error Condition="'$(NetcodeFacepunchTransportPath)'==''" Text="Facepunch transport assembly not found. Expected Netcode.Transports.Facepunch.dll or Unity.Netcode.Transports.Facepunch.dll in: $(LC_MANAGED_DIR)" />
+    <Error Condition="'$(TextMeshProPath)'==''" Text="TextMeshPro assembly not found. Expected Unity.TextMeshPro.dll in: $(LC_MANAGED_DIR)" />
+  </Target>
+
+  <ItemGroup>
+    <!-- BepInEx -->
+    <Reference Include="BepInEx">
+      <HintPath>$(BEPINEX_CORE_DIR)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BEPINEX_CORE_DIR)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Game / Unity -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(LC_MANAGED_DIR)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine" Condition="Exists('$(LC_MANAGED_DIR)\UnityEngine.dll')">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule" Condition="Exists('$(LC_MANAGED_DIR)\UnityEngine.PhysicsModule.dll')">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI" Condition="Exists('$(LC_MANAGED_DIR)\UnityEngine.UI.dll')">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule" Condition="Exists('$(LC_MANAGED_DIR)\UnityEngine.UIModule.dll')">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule" Condition="Exists('$(LC_MANAGED_DIR)\UnityEngine.IMGUIModule.dll')">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule" Condition="Exists('$(LC_MANAGED_DIR)\UnityEngine.TextRenderingModule.dll')">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.SceneManagementModule" Condition="Exists('$(LC_MANAGED_DIR)\UnityEngine.SceneManagementModule.dll')">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.SceneManagementModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.RenderingModule" Condition="Exists('$(LC_MANAGED_DIR)\UnityEngine.RenderingModule.dll')">
+      <HintPath>$(LC_MANAGED_DIR)\UnityEngine.RenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="Unity.Collections">
+      <HintPath>$(LC_MANAGED_DIR)\Unity.Collections.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(LC_MANAGED_DIR)\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(TextMeshProPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="Unity.Netcode.Runtime">
+      <HintPath>$(UnityNetcodeRuntimePath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="Netcode.Transports.Facepunch">
+      <HintPath>$(NetcodeFacepunchTransportPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="Facepunch.Steamworks">
+      <HintPath>$(SteamworksAssemblyPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Copy game assets if needed by tooling (packaging script copies Lang separately) -->
+  <ItemGroup>
+    <None Include="Lang\*.json" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
+  <!-- Package zip after successful Release build -->
+  <Target Name="PackZip" AfterTargets="Build" Condition="'$(Configuration)'=='Release' and '$(RunPack)'=='true'">
+    <Exec Command="&quot;$(MSBuildProjectDirectory)\Build\Pack.bat&quot; &quot;$(MSBuildProjectDirectory)\&quot; &quot;$(TargetDir)&quot; &quot;$(RepoRoot)&quot; &quot;$(AssemblyName)&quot;" />
+  </Target>
+</Project>

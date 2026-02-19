@@ -1,4 +1,4 @@
-﻿using AntiCheat.Core;
+using AntiCheat.Core;
 using AntiCheat.Patch;
 
 using BepInEx;
@@ -1693,7 +1693,7 @@ namespace AntiCheat
         {
             if (Check(rpcParams, out var p))
             {
-                if (Core.AntiCheat.GrabObject.Value && Core.AntiCheat.GrabObject_BeltBag.Value)
+                if (Core.AntiCheat.GrabObject.Value)
                 {
                     reader.ReadValueSafe(out NetworkObjectReference netObjectRef, default);
                     ByteUnpacker.ReadValueBitPacked(reader, out int playerWhoAdded);
@@ -1705,8 +1705,18 @@ namespace AntiCheat
                         {
                             return true;
                         }
-                        ((BeltBagItem)target).CancelAddObjectToBagClientRpc(playerWhoAdded);
-                        return false;
+                        if (Core.AntiCheat.GrabObject_SendLog.Value)
+                        {
+                            ShowMessage(locale.Msg_GetString("GrabObject_BeltBag", new Dictionary<string, string>() {
+                                { "{player}",p.playerUsername },
+                                { "{itemName}",component.itemProperties.itemName }
+                            }));
+                        }
+                        if (Core.AntiCheat.GrabObject_BeltBag.Value)
+                        {
+                            ((BeltBagItem)target).CancelAddObjectToBagClientRpc(playerWhoAdded);
+                            return false;
+                        }
                     }
                 }
             }
@@ -1757,20 +1767,33 @@ namespace AntiCheat
                         {
                             LogInfo(p, "PlayerControllerB.GrabObjectServerRpc", $"itemName:{g.itemProperties.itemName}", $"heldByPlayerOnServer:{(g.heldByPlayerOnServer ? g.playerHeldBy?.playerUsername : "false")}", $"Distance:{Vector3.Distance(p.transform.position, g.transform.position)}");
                             bool ban = false;
-                            if (Core.AntiCheat.GrabObject_TwoHand.Value)
+                            var twoHandDetected =
+                                (g.itemProperties.twoHanded && hastwohand) ||
+                                (g.itemProperties.twoHanded && jetpack) ||
+                                (hastwohand && jetpack);
+                            if (twoHandDetected)
                             {
-                                if (g.itemProperties.twoHanded && hastwohand)
+                                if (Core.AntiCheat.GrabObject_SendLog.Value)
+                                {
+                                    ShowMessage(locale.Msg_GetString("GrabObject_TwoHand", new Dictionary<string, string>() {
+                                        { "{player}",p.playerUsername },
+                                        { "{itemName}",g.itemProperties.itemName },
+                                        { "{hasTwoHand}",hastwohand.ToString() },
+                                        { "{jetpack}",jetpack.ToString() }
+                                    }));
+                                }
+                                if (Core.AntiCheat.GrabObject_TwoHand.Value)
                                 {
                                     ban = true;
                                 }
-                                else if (g.itemProperties.twoHanded && jetpack)
-                                {
-                                    ban = true;
-                                }
-                                else if (hastwohand && jetpack)
-                                {
-                                    ban = true;
-                                }
+                            }
+                            var moreSlotDetected = all && !ban;
+                            if (moreSlotDetected && Core.AntiCheat.GrabObject_SendLog.Value)
+                            {
+                                ShowMessage(locale.Msg_GetString("GrabObject_MoreSlot", new Dictionary<string, string>() {
+                                    { "{player}",p.playerUsername },
+                                    { "{itemName}",g.itemProperties.itemName }
+                                }));
                             }
                             if (Core.AntiCheat.GrabObject_MoreSlot.Value && !ban)
                             {
@@ -1778,6 +1801,10 @@ namespace AntiCheat
                             }
                             if (ban)
                             {
+                                if (Core.AntiCheat.GrabObject_Kick.Value)
+                                {
+                                    KickPlayer(p);
+                                }
                                 var __rpc_exec_stage = typeof(NetworkBehaviour).GetField("__rpc_exec_stage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                                 __rpc_exec_stage.SetValue(target, 1);
                                 typeof(PlayerControllerB).GetMethod("GrabObjectServerRpc", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke((PlayerControllerB)target, new object[] {
@@ -1792,14 +1819,17 @@ namespace AntiCheat
                                 {
                                     return true;
                                 }
-                                ShowMessage(locale.Msg_GetString("GrabObject", new Dictionary<string, string>() {
-                                    { "{player}",p.playerUsername },
-                                    { "{object_position}",g.transform.position.ToString() },
-                                    { "{player_position}",p.serverPlayerPosition.ToString() }
-                                }));
+                                if (Core.AntiCheat.GrabObject_SendLog.Value)
+                                {
+                                    ShowMessage(locale.Msg_GetString("GrabObject", new Dictionary<string, string>() {
+                                        { "{player}",p.playerUsername },
+                                        { "{object_position}",g.transform.position.ToString() },
+                                        { "{player_position}",p.serverPlayerPosition.ToString() }
+                                    }));
+                                }
                                 g = default;
                                 grabbedObject = default;
-                                if (Core.AntiCheat.GrabObject_MoreSlot.Value)
+                                if (Core.AntiCheat.GrabObject_Kick.Value)
                                 {
                                     KickPlayer(p);
                                 }

@@ -1,4 +1,4 @@
-﻿using AntiCheat.Locale;
+using AntiCheat.Locale;
 using AntiCheat.Patch;
 
 using BepInEx;
@@ -31,6 +31,7 @@ namespace AntiCheat.Core
     {
         public const string Version = "0.8.7";
         public static ManualLogSource ManualLog = null;
+        private static bool _reloadingConfigFromWatcher = false;
 
         public enum MessageType
         {
@@ -90,6 +91,7 @@ namespace AntiCheat.Core
         public static ConfigEntry<bool> Invisibility2;
 
         public static ConfigEntry<bool> GrabObject;
+        public static ConfigEntry<bool> GrabObject_SendLog;
         public static ConfigEntry<bool> GrabObject_MoreSlot;
         public static ConfigEntry<bool> GrabObject_TwoHand;
         public static ConfigEntry<bool> GrabObject_BeltBag;
@@ -297,7 +299,16 @@ namespace AntiCheat.Core
         private void Watcher_Changed(object sender, FileSystemEventArgs e)
         {
             LogInfo($"Reload Config");
-            LoadConfig();
+            _reloadingConfigFromWatcher = true;
+            try
+            {
+                Config.Reload();
+                LoadConfig();
+            }
+            finally
+            {
+                _reloadingConfigFromWatcher = false;
+            }
         }
 
         public static void LogInfo(string info)
@@ -404,6 +415,7 @@ namespace AntiCheat.Core
             Map2 = Config.Bind("MapSetting", "Kick", false, localizationManager.Cfg_GetString("Kick"));
 
             GrabObject = Config.Bind("GrabObjectSetting", "Enable", true, localizationManager.Cfg_GetString("GrabObject"));
+            GrabObject_SendLog = Config.Bind("GrabObjectSetting", "SendLog", true, localizationManager.Cfg_GetString("GrabObject_SendLog"));
             GrabObject_MoreSlot = Config.Bind("GrabObjectSetting", "MoreSlot", true, localizationManager.Cfg_GetString("GrabObject_MoreSlot"));
             GrabObject_TwoHand = Config.Bind("GrabObjectSetting", "TwoHand", true, localizationManager.Cfg_GetString("GrabObject_TwoHand"));
             GrabObject_BeltBag = Config.Bind("GrabObjectSetting", "BeltBag", true, localizationManager.Cfg_GetString("GrabObject_BeltBag"));
@@ -440,6 +452,13 @@ namespace AntiCheat.Core
                () => AntiCheat.ChatReal_Cooldown.Value / 1000f
             );
             LogInfo($"{localizationManager.Log_GetString("load")}");
+
+            // Ensure newly added config entries are written to disk at least once.
+            // Avoid saving during file watcher reloads to prevent save->change->reload loops.
+            if (!_reloadingConfigFromWatcher)
+            {
+                Config.Save();
+            }
         }
 
     }
