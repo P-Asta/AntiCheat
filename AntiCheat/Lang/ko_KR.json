@@ -11,7 +11,7 @@
     "Gift": "플레이어가 선물 상자를 여러번 사용하는걸 감지합니다.",
     "GrabObject": "기본 잡기 범위 밖에서 아이템을 집을 때 이를 감지합니다.",
     "GrabObject_SendLog": "GrabObject 관련 감지 메시지를 표시합니다.",
-    "GrabObject_BeltBag": "플레이어가 벨트 가방으로 스크랩을 집는 것을 비활성화합니다. (가방모드 비활성화)",
+    "GrabObject_BeltBag": "플레이어가 가방에 스크랩을 넣는 것을 비활성화합니다.",
     "GrabObject_MoreSlot": "플레이어가 4개 이상의 아이템을 집는 것을 방지합니다.",
     "GrabObject_TwoHand": "플레이어가 동시에 여러 개의 양손 아이템을 집는 것을 방지합니다. (양손모드 비활성화)",
     "Health_Recover": "플레이어가 음수 피해를 사용하여 체력을 회복할 때 이를 감지합니다. (healthstation같은거 비활성화)",

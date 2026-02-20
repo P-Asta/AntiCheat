@@ -1792,13 +1792,14 @@ namespace AntiCheat
                             {
                                 if (Core.AntiCheat.GrabObject_SendLog.Value && !jetpackGrabTwoHandDetected)
                                 {
-                                    ShowMessage(locale.Msg_GetString("GrabObject_TwoHand", new Dictionary<string, string>() {
-                                        { "{player}",p.playerUsername },
-                                        { "{heldItemName}",heldItemName },
-                                        { "{itemName}",g.itemProperties.itemName },
-                                        { "{hasTwoHand}",hastwohand.ToString() },
-                                        { "{jetpack}",jetpack.ToString() }
-                                    }));
+                                    if (!jetpack)
+                                        ShowMessage(locale.Msg_GetString("GrabObject_TwoHand", new Dictionary<string, string>() {
+                                            { "{player}",p.playerUsername },
+                                            { "{heldItemName}",heldItemName },
+                                            { "{itemName}",g.itemProperties.itemName },
+                                            { "{hasTwoHand}",hastwohand.ToString() },
+                                            { "{jetpack}",jetpack.ToString() }
+                                        }));
                                 }
                                 if (Core.AntiCheat.GrabObject_TwoHand.Value)
                                 {
