@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.3
+change locale path
+
 ## 1.0.2
 
 - 반복 질주 의심 관찰을 기본 활성화로 추가했습니다. `[StaminaObservationSetting] Enable`로 끌 수 있으며 강퇴 설정은 없습니다.

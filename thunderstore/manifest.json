@@ -1,6 +1,6 @@
 {
     "name": "AstaAntiCheat",
-    "version_number": "1.0.2",
+    "version_number": "1.0.3",
     "website_url": "https://github.com/P-Asta/AntiCheat",
     "description": "Host-side AntiCheat fork with utility-slot fixes, malformed request blocking and host-only repeated-sprint suspicion notices.",
     "dependencies": [
