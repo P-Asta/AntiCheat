@@ -1,17 +1,12 @@
 using AntiCheat.Utils;
 
-using HarmonyLib;
-
 using Unity.Netcode;
 
 namespace AntiCheat.Patches
 {
-    [HarmonyPatch(typeof(GrabbableObject))]
-    [HarmonyWrapSafe]
     public static class GrabbableObjectShipSystemsPatch
     {
-        [HarmonyPrefix]
-        [HarmonyPatch("__rpc_handler_4280509730")]
+        // Registered only when its legacy handler exists; see LegacyRpcCompatibilityPatch.
         public static bool ActivateItemServerRpc(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
         {
             if (PatchHelper.Check(rpcParams, out var player))

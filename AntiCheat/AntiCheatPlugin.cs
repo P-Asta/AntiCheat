@@ -9,8 +9,12 @@ using GameNetcodeStuff;
 using HarmonyLib;
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Globalization;
+using System.Text;
+using UnityEngine;
 
 [BepInPlugin(LCMPluginInfo.PLUGIN_GUID, LCMPluginInfo.PLUGIN_NAME, LCMPluginInfo.PLUGIN_VERSION)]
 public class AntiCheatPlugin : BaseUnityPlugin
@@ -18,7 +22,7 @@ public class AntiCheatPlugin : BaseUnityPlugin
     internal static ManualLogSource Log = null!;
     internal static LocalizationManager localizationManager = null!;
 
-    private static string _lastMessage = string.Empty;
+    private static readonly Dictionary<string, float> _messageTimes = new Dictionary<string, float>();
 
     private static readonly MethodInfo AddChatMessageMethod =
         AccessTools.DeclaredMethod(typeof(HUDManager), "AddChatMessage");
@@ -60,23 +64,30 @@ public class AntiCheatPlugin : BaseUnityPlugin
 
     public static void ShowMessage(string msg, string dedupeKey = null)
     {
+        if (HUDManager.Instance == null)
+        {
+            return;
+        }
+
         var showMessage = localizationManager
             .MessageFormat()
             .Replace("{Prefix}", localizationManager.Prefix())
             .Replace("{msg}", msg);
 
         var compareKey = dedupeKey ?? showMessage;
-        if (_lastMessage == compareKey)
+        float now = Time.realtimeSinceStartup;
+        if (_messageTimes.TryGetValue(compareKey, out float previous) && now >= previous && now - previous < 10f)
         {
             return;
         }
 
-        _lastMessage = compareKey;
-
-        if (HUDManager.Instance == null)
+        // Keep notification history bounded, including lobbies with changing player names.
+        if (_messageTimes.Count >= 256)
         {
-            return;
+            _messageTimes.Clear();
         }
+        _messageTimes[compareKey] = now;
+        LogInfo($"Detection|{showMessage}");
 
         switch (PluginConfig.DetectedMessageType.Value)
         {
@@ -87,7 +98,7 @@ public class AntiCheatPlugin : BaseUnityPlugin
                 ShowMessageHostOnly(showMessage);
                 break;
             default:
-                LogInfo($"ShowGUI|{showMessage}");
+                HUDManager.Instance.DisplayTip("AstaAntiCheat", showMessage, true, false);
                 break;
         }
     }
@@ -101,6 +112,29 @@ public class AntiCheatPlugin : BaseUnityPlugin
 
         LogInfo($"ShowMessageHostOnly -> {msg}");
         AddChatMessageMethod.Invoke(HUDManager.Instance, new object[] { msg, "", -1, false });
+    }
+
+    internal static void ShowStaminaSuspicion(PlayerControllerB player)
+    {
+        if (StartOfRound.Instance == null || !StartOfRound.Instance.IsHost ||
+            player == null || player.IsOwner || HUDManager.Instance == null)
+            return;
+
+        var name = new StringBuilder();
+        foreach (char character in player.playerUsername ?? string.Empty)
+        {
+            if (name.Length >= 64) break;
+            if (char.GetUnicodeCategory(character) == UnicodeCategory.Format) continue;
+            name.Append(char.IsControl(character) ? ' ' : character == '<' ? '‹' : character == '>' ? '›' : character);
+        }
+        string message = localizationManager.Msg_GetString("StaminaSuspicion", new Dictionary<string, string>
+        {
+            { "{player}", name.ToString() },
+            { "{id}", player.actualClientId.ToString() }
+        });
+        // Observation is uncertain: always local, regardless of the confirmed-detection destination.
+        ShowMessageHostOnly(localizationManager.MessageFormat()
+            .Replace("{Prefix}", localizationManager.Prefix()).Replace("{msg}", message));
     }
 
     public static void AddTextMessageClientRpc(string showMessage)

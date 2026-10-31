@@ -1,5 +1,7 @@
 {
   "Config": {
+    "StaminaObservation": "观察到三次独立的过长冲刺且移动距离充足时，仅向房主显示疑似提示。TZP、受伤或状态不确定时清除观察记录。不判定作弊，不阻止行动，也不踢人。",
+    "RpcValidation": "拦截并提示无效购买或星球 ID、负数余额、损坏的购买或聊天请求以及聊天身份冒用。关闭后仍会静默拒绝无法解析的请求。不包含体力推测检测。",
     "Boss": "召唤老板检测",
     "ChangToFreeMoon": "检测玩家将 付费星球 切换至 免费星球",
     "ChatReal": "发言伪造检测",
@@ -60,6 +62,14 @@
     "refuse_connect": "{steamId} 尝试重连游戏被拒绝(已被踢出)！"
   },
   "Message": {
+    "StaminaSuspicion": "[观察提示] {player}（客户端 {id}）出现了3次超过宽松观察阈值的独立长时间冲刺。这不能证明体力被修改，请检查其他模组和同步影响。未自动处罚。",
+    "RpcRejected": "已拦截 {player}（客户端 {id}）的 {rpc} 请求：{reason}",
+    "RpcInvalidIndex": "无效目标 ID",
+    "RpcInvalidCredits": "负数余额请求",
+    "RpcInvalidCount": "无效配送数量",
+    "RpcMalformedPayload": "请求损坏或编码长度无效",
+    "RpcChatIdentity": "聊天作者与实际发送者不符",
+    "RpcInvalidChat": "聊天格式或长度无效",
     "behind_player": "<color=yellow>[{player}] <color=red>被抛弃了</color></color>",
     "Boss": "检测到玩家 {player} 召唤老板！",
     "ChangeLevel": "检测 {player} 将付费星球改为免费星球！(这个行为只有房主才被允许！)",

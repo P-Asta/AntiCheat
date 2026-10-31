@@ -2,13 +2,15 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
-		<AssemblyName>AntiCheat</AssemblyName>
-		<Authors>chuxiaaaa</Authors>
-		<Description>AntiCheat</Description>
-		<Product>AntiCheat</Product>
-		<Version>1.0.0</Version>
+		<AssemblyName>AstaAntiCheat</AssemblyName>
+		<Authors>P-Asta;chuxiaaaa</Authors>
+		<Description>AstaAntiCheat, a fork of chuxiaaaa's AntiCheat for Lethal Company.</Description>
+		<Product>AstaAntiCheat</Product>
+		<Version>1.0.2</Version>
+		<!-- Preserve existing configuration and prevent loading both forks with different IDs. -->
+		<LCMPluginGuid>AntiCheat</LCMPluginGuid>
 		<ProjectDepsFileName>$(Product).deps.json</ProjectDepsFileName>
-		<RootNamespace>$(Product)</RootNamespace>
+		<RootNamespace>AntiCheat</RootNamespace>
 		<TargetName>$(Product)</TargetName>
 	</PropertyGroup>
 	<PropertyGroup>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- HarmonyX's MonoMod dependency predates .NET 10 runtime detours. -->
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(LegacyRpcTargets)' == 'all'">
+    <DefineConstants>$(DefineConstants);LEGACY_RPC_ALL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(LegacyRpcTargets)' == 'mixed'">
+    <DefineConstants>$(DefineConstants);LEGACY_RPC_MIXED</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('../../AntiCheat/Patches/Infrastructure/LegacyRpcCompatibilityPatch.cs')">
+    <Compile Include="../../AntiCheat/Patches/Infrastructure/LegacyRpcCompatibilityPatch.cs" Link="LegacyRpcCompatibilityPatch.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Same Harmony version already used by the production dependency graph. -->
+    <PackageReference Include="HarmonyX" Version="2.10.1" />
+  </ItemGroup>
+</Project>

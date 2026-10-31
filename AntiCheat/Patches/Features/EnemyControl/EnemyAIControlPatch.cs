@@ -56,9 +56,7 @@ namespace AntiCheat.Patches
         /// <summary>
         /// Prefix EnemyAI.UpdateEnemyPositionRpc
         /// </summary>
-        [HarmonyPatch("__rpc_handler_255411420")]
-        [HarmonyPrefix]
-        [HarmonyWrapSafe]
+        // Registered only when its legacy handler exists; see LegacyRpcCompatibilityPatch.
         public static bool UpdateEnemyPositionServerRpc(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
         {
             if (!Check(rpcParams, out var player) && player == null)

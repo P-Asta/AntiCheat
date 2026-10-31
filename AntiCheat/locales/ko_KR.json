@@ -1,5 +1,7 @@
 {
   "Config": {
+    "StaminaObservation": "충분한 이동 거리를 동반한 과도한 질주가 별도 구간에서 3회 반복될 때 호스트에게만 의심 알림을 표시합니다. TZP·피해·불확실한 상태에서는 관찰을 초기화합니다. 치트 확정이 아니며 차단·강퇴하지 않습니다.",
+    "RpcValidation": "잘못된 구매·행성 ID, 음수 크레딧, 손상된 구매·채팅 요청과 채팅 발신자 사칭을 차단하고 알립니다. 끄더라도 파싱할 수 없는 요청은 조용히 거절합니다. 스태미나 추정 감지는 포함하지 않습니다.",
     "Boss": "플레이어가 회사 몬스터를 강제로 공격하게 하려고 시도할 때 이를 감지합니다.",
     "ChangToFreeMoon": "플레이어가 유료 달을 무료 달로 변경하는 것을 감지합니다",
     "ChatReal": "플레이어가 다른 플레이어의 이름으로 속이려고 할 때 이를 감지합니다.",
@@ -60,6 +62,14 @@
     "refuse_connect": "{steamId}가 게임에 접속을 시도했으나 거부되었습니다! (이미 킥됨)"
   },
   "Message": {
+    "StaminaSuspicion": "[관찰 알림] {player} (접속 ID {id})에게서 여유 기준을 넘는 긴 질주가 3회 반복 관측됐습니다. 스태미나 변조가 확정된 것은 아니며 다른 모드나 동기화 영향을 확인하세요. 자동 제재는 없습니다.",
+    "RpcRejected": "{player} (접속 ID {id})의 {rpc} 요청 차단: {reason}",
+    "RpcInvalidIndex": "유효하지 않은 대상 ID",
+    "RpcInvalidCredits": "음수 크레딧 요청",
+    "RpcInvalidCount": "유효하지 않은 배송 수량",
+    "RpcMalformedPayload": "손상되었거나 길이가 잘못된 요청",
+    "RpcChatIdentity": "실제 발신자와 다른 채팅 작성자 ID",
+    "RpcInvalidChat": "잘못된 채팅 형식 또는 길이",
     "behind_player": "<color=yellow>[{player}] <color=red>가 버려졌습니다.</color></color>",
     "Boss": "{player} 님이 회사 몬스터를 강제로 공격하게 하려고 시도하는 것이 감지되었습니다!",
     "ChangeLevel": "{player} 님이 유료 달을 무료 달로 변경하려고 시도하는 것이 감지되었습니다! (이 행동은 호스트에게만 허용됩니다!)",

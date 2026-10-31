@@ -1,0 +1,9 @@
+{
+    "name": "AstaAntiCheat",
+    "version_number": "1.0.2",
+    "website_url": "https://github.com/P-Asta/AntiCheat",
+    "description": "Host-side AntiCheat fork with utility-slot fixes, malformed request blocking and host-only repeated-sprint suspicion notices.",
+    "dependencies": [
+        "BepInEx-BepInExPack-5.4.2305"
+    ]
+}

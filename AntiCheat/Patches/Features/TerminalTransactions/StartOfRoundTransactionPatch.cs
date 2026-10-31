@@ -1,5 +1,6 @@
 using HarmonyLib;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -26,9 +27,27 @@ namespace AntiCheat.Patches
                     return false;
                 }
 
-                ByteUnpacker.ReadValueBitPacked(reader, out int levelID);
-                ByteUnpacker.ReadValueBitPacked(reader, out int newGroupCreditsAmount);
-                reader.Seek(0);
+                if (!TryReadTransaction(reader, out int levelID, out int newGroupCreditsAmount))
+                {
+                    return RejectUnsafe(player, "StartOfRound.ChangeLevelServerRpc", "RpcMalformedPayload");
+                }
+                var round = (StartOfRound)target;
+                if (round.levels == null)
+                {
+                    return false;
+                }
+                if (levelID < 0 || levelID >= round.levels.Length)
+                {
+                    return RejectUnsafe(player, "StartOfRound.ChangeLevelServerRpc", "RpcInvalidIndex");
+                }
+                if (round.levels[levelID] == null)
+                {
+                    return false;
+                }
+                if (RpcGuard.Enabled && newGroupCreditsAmount < 0)
+                {
+                    return RpcGuard.Reject(player, "StartOfRound.ChangeLevelServerRpc", "RpcInvalidCredits");
+                }
                 if (PluginConfig.FreeBuy.Value)
                 {
                     if (newGroupCreditsAmount > Money || Money < 0)
@@ -44,20 +63,19 @@ namespace AntiCheat.Patches
                         }
                         return false;
                     }
-                    if (levelID > StartOfRound.Instance.levels.Length)
+                    var route = terminal?.terminalNodes?.allKeywords?.FirstOrDefault(x =>
+                        x != null && string.Equals(x.word, "route", StringComparison.OrdinalIgnoreCase));
+                    var level = round.levels[levelID].PlanetName?.Split(' ')[0];
+                    var destination = route?.compatibleNouns?.FirstOrDefault(x => x?.result != null &&
+                        (x.result.buyRerouteToMoon == levelID || x.result.name == level + "route"))?.result;
+                    if (destination != null)
                     {
-                        LogInfo(player, "StartOfRound.ChangeLevelServerRpc", "levelID > StartOfRound.Instance.levels.Length");
-                        return false;
-                    }
-                    var route = terminal.terminalNodes.allKeywords.FirstOrDefault(x => x.word.ToLower() == "route");
-                    var level = StartOfRound.Instance.levels[levelID].PlanetName.Split(' ')[0];
-                    var compatibleNoun = route.compatibleNouns.Where(x => x.result.name == level + "route");
-                    if (compatibleNoun.Any())
-                    {
-                        int itemCost = compatibleNoun.First().result.itemCost;
-                        level = StartOfRound.Instance.currentLevel.PlanetName.Split(' ')[0];
-                        var currentCompatibleNoun = route.compatibleNouns.Where(x => x.result.name == level + "route");
-                        if (itemCost == 0 && currentCompatibleNoun.Any() && currentCompatibleNoun.First().result.itemCost != 0)
+                        int itemCost = destination.itemCost;
+                        level = round.currentLevel?.PlanetName?.Split(' ')[0];
+                        int currentLevelID = Array.IndexOf(round.levels, round.currentLevel);
+                        var currentRoute = route.compatibleNouns.FirstOrDefault(x => x?.result != null &&
+                            ((currentLevelID >= 0 && x.result.buyRerouteToMoon == currentLevelID) || x.result.name == level + "route"))?.result;
+                        if (PluginConfig.ShipSetting_ChangToFreeMoon.Value && itemCost == 0 && currentRoute != null && currentRoute.itemCost != 0)
                         {
                             ShowMessage(locale.Msg_GetString("ChangeToFreeLevel", new Dictionary<string, string>()
                             {
@@ -84,12 +102,12 @@ namespace AntiCheat.Patches
                         }
                     }
                 }
-                if (PluginConfig.OperationLog.Value && levelID < StartOfRound.Instance.levels.Length)
+                if (PluginConfig.OperationLog.Value)
                 {
                     ShowMessageHostOnly(locale.OperationLog_GetString("ChangeLevel", new Dictionary<string, string>()
                     {
                         { "{player}", player.playerUsername },
-                        { "{planet}", StartOfRound.Instance.levels[levelID].PlanetName }
+                        { "{planet}", round.levels[levelID].PlanetName }
                     }));
                 }
             }
@@ -112,12 +130,32 @@ namespace AntiCheat.Patches
                 {
                     return false;
                 }
-                ByteUnpacker.ReadValueBitPacked(reader, out int unlockableID);
-                ByteUnpacker.ReadValueBitPacked(reader, out int newGroupCreditsAmount);
-                reader.Seek(0);
+                if (!TryReadTransaction(reader, out int unlockableID, out int newGroupCreditsAmount))
+                {
+                    return RejectUnsafe(player, "StartOfRound.BuyShipUnlockableServerRpc", "RpcMalformedPayload");
+                }
+                var unlockables = ((StartOfRound)target).unlockablesList?.unlockables;
+                if (unlockables == null)
+                {
+                    return false;
+                }
+                if (unlockableID < 0 || unlockableID >= unlockables.Count)
+                {
+                    return RejectUnsafe(player, "StartOfRound.BuyShipUnlockableServerRpc", "RpcInvalidIndex");
+                }
+                var unlockable = unlockables[unlockableID];
+                if (unlockable == null)
+                {
+                    return false;
+                }
+                if (RpcGuard.Enabled && newGroupCreditsAmount < 0)
+                {
+                    return RpcGuard.Reject(player, "StartOfRound.BuyShipUnlockableServerRpc", "RpcInvalidCredits");
+                }
                 if (PluginConfig.FreeBuy.Value)
                 {
-                    if (Money == newGroupCreditsAmount || Money == 0)
+                    bool isFree = unlockable.shopSelectionNode != null && unlockable.shopSelectionNode.itemCost == 0;
+                    if (!isFree && (Money == newGroupCreditsAmount || Money == 0))
                     {
                         ShowMessage(locale.Msg_GetString("FreeBuy_unlockable", new Dictionary<string, string>()
                         {
@@ -143,13 +181,12 @@ namespace AntiCheat.Patches
                         return false;
                     }
                 }
-                if (PluginConfig.OperationLog.Value &&
-                    unlockableID < StartOfRound.Instance.unlockablesList.unlockables.Count)
+                if (PluginConfig.OperationLog.Value)
                 {
                     ShowMessageHostOnly(locale.OperationLog_GetString("BuyShipUnlockable", new Dictionary<string, string>()
                     {
                         { "{player}", player.playerUsername },
-                        { "{unlockable}", StartOfRound.Instance.unlockablesList.unlockables[unlockableID].unlockableName }
+                        { "{unlockable}", unlockable.unlockableName }
                     }));
                 }
             }
@@ -158,6 +195,37 @@ namespace AntiCheat.Patches
                 return false;
             }
             return true;
+        }
+
+        private static bool TryReadTransaction(FastBufferReader reader, out int id, out int credits)
+        {
+            int originalPosition = reader.Position;
+            id = credits = 0;
+            try
+            {
+                if (!TerminalTransactionPatch.TryReadPackedInt(reader, out id))
+                {
+                    return false;
+                }
+                if (!TerminalTransactionPatch.TryReadPackedInt(reader, out credits))
+                {
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception exception) when (exception is OverflowException || exception is ArgumentException || exception is InvalidOperationException)
+            {
+                return false;
+            }
+            finally
+            {
+                reader.Seek(originalPosition);
+            }
+        }
+
+        private static bool RejectUnsafe(GameNetcodeStuff.PlayerControllerB player, string rpc, string reason)
+        {
+            return RpcGuard.Enabled ? RpcGuard.Reject(player, rpc, reason) : false;
         }
 
         [HarmonyPatch("BuyShipUnlockableClientRpc")]

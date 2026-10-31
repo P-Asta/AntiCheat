@@ -1,17 +1,12 @@
 using GameNetcodeStuff;
 
-using HarmonyLib;
-
 using Unity.Netcode;
 
 namespace AntiCheat.Patches
 {
-    [HarmonyPatch(typeof(PlayerControllerB))]
-    [HarmonyWrapSafe]
     public static class PlayerControllerOperationLogPatch
     {
-        [HarmonyPatch("__rpc_handler_760742013")]
-        [HarmonyPrefix]
+        // Registered only when its legacy handler exists; see LegacyRpcCompatibilityPatch.
         public static bool DropAllHeldItemsServerRpc(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
         {
             if (!PatchHelper.Check(rpcParams, out var player))

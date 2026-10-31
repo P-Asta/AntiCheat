@@ -39,6 +39,7 @@ namespace AntiCheat
         public static FeatureConfig GrabObject = null!;
         public static FeatureConfig Jetpack = null!;
         public static FeatureConfig Enemy = null!;
+        public static FeatureConfig RpcValidation = null!;
 
         public static ConfigEntry<bool> IgnoreClientConfig = null!;
         public static ConfigEntry<string> Prefix = null!;
@@ -64,6 +65,7 @@ namespace AntiCheat
         public static ConfigEntry<bool> GrabObject_TwoHand = null!;
         public static ConfigEntry<bool> GrabObject_BeltBag = null!;
         public static ConfigEntry<MessageType> DetectedMessageType = null!;
+        public static ConfigEntry<bool> StaminaObservation = null!;
 
         public static ConfigEntry<bool> Shovel2 => Shovel.KickEntry!;
         public static ConfigEntry<bool> ShipBuild2 => ShipBuild.KickEntry!;
@@ -186,6 +188,9 @@ namespace AntiCheat
             RPCReport = new FeatureConfig(config, "RPCReportSetting", localizationManager.Cfg_GetString("RPCReport_Hit"));
             Shovel = new FeatureConfig(config, "ShovelSettings", localizationManager.Cfg_GetString("Shovel"));
             GrabObject = new FeatureConfig(config, "GrabObjectSetting", localizationManager.Cfg_GetString("GrabObject"));
+            RpcValidation = new FeatureConfig(config, "RpcValidationSetting", localizationManager.Cfg_GetString("RpcValidation"));
+            StaminaObservation = config.Bind("StaminaObservationSetting", "Enable", true,
+                localizationManager.Cfg_GetString("StaminaObservation"));
 
             ShipLight_Cooldown = config.Bind(
                 "ShipLightSettings",

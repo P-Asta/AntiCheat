@@ -2,6 +2,7 @@ using GameNetcodeStuff;
 
 using HarmonyLib;
 
+using System.Collections.Generic;
 using System.Reflection;
 
 using Unity.Netcode;
@@ -15,14 +16,25 @@ namespace AntiCheat.Patches
     [HarmonyWrapSafe]
     public static class PlayerControllerGrabObjectPatch
     {
+        // v80+ routes eligible tools to the separate utility slot (50).
+        // Resolve the new overload at runtime to retain compatibility with v73.
+        private static readonly MethodInfo FirstEmptyItemSlotWithItem = AccessTools.Method(
+            typeof(PlayerControllerB), "FirstEmptyItemSlot", new[] { typeof(GrabbableObject) });
+        private static readonly FieldInfo UtilitySlot = AccessTools.Field(typeof(PlayerControllerB), "ItemOnlySlot");
+
         [HarmonyPatch("__rpc_handler_412259855")]
         [HarmonyPrefix]
         [HarmonyWrapSafe]
         public static bool SwitchItemSlotsServerRpc(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
         {
+            if (rpcParams.Server.Receive.SenderClientId != target.OwnerClientId)
+            {
+                return true; // Let the native handler reject requests for someone else's player.
+            }
             if (Check(rpcParams, out var player))
             {
-                if (player.currentlyHeldObjectServer != null && player.currentlyHeldObjectServer.itemProperties.twoHanded)
+                if (target == player && PluginConfig.GrabObject.Value && PluginConfig.GrabObject_TwoHand.Value &&
+                    IsHoldingTwoHandedItem(player))
                 {
                     return false;
                 }
@@ -41,134 +53,180 @@ namespace AntiCheat.Patches
         [HarmonyWrapSafe]
         public static bool GrabObjectServerRpc(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
         {
+            if (rpcParams.Server.Receive.SenderClientId != target.OwnerClientId)
+            {
+                return true;
+            }
             if (Check(rpcParams, out var player))
             {
-                if (PluginConfig.GrabObject.Value)
+                if (target == player && PluginConfig.GrabObject.Value)
                 {
-                    reader.ReadValueSafe(out NetworkObjectReference grabbedObject, default);
-                    reader.Seek(0);
+                    var position = reader.Position;
+                    NetworkObjectReference grabbedObject;
+                    try
+                    {
+                        reader.ReadValueSafe(out grabbedObject, default);
+                    }
+                    finally
+                    {
+                        reader.Seek(position);
+                    }
                     if (grabbedObject.TryGet(out var networkObject, null))
                     {
+                        var grabbable = networkObject.GetComponentInChildren<GrabbableObject>();
+                        // Vanilla rejects a contested/already processed grab. It is not evidence of cheating.
+                        if (grabbable == null || grabbable.heldByPlayerOnServer)
+                        {
+                            return true;
+                        }
+                        if (grabbable.itemProperties == null || player.ItemSlots == null)
+                        {
+                            player.GrabObjectClientRpc(false, grabbedObject);
+                            return false;
+                        }
+
                         var allSlotsFull = true;
                         var hasJetpack = false;
-                        var hasTwoHanded = false;
+                        var hasTwoHandedWithoutJetpack = false;
+                        var inventoryConsistent = true;
+                        var alreadyStored = false;
+                        var seenItems = new HashSet<GrabbableObject>();
                         foreach (var item in player.ItemSlots)
                         {
+                            alreadyStored |= item == grabbable;
                             if (item == null)
                             {
                                 allSlotsFull = false;
                             }
-                            else if (item.itemProperties.twoHanded)
+                            else if (!IsOwnedInventoryItem(player, item) || item == grabbable || !seenItems.Add(item))
                             {
-                                hasTwoHanded = true;
+                                inventoryConsistent = false;
                             }
-                            else if (item is JetpackItem)
+                            else
                             {
-                                hasJetpack = true;
+                                hasJetpack |= item is JetpackItem;
+                                hasTwoHandedWithoutJetpack |= item.itemProperties.twoHanded && !(item is JetpackItem);
                             }
                         }
-                        var grabbable = networkObject.GetComponentInChildren<GrabbableObject>();
-                        if (grabbable != null)
+                        var utilityItem = UtilitySlot?.GetValue(player) as GrabbableObject;
+                        if (alreadyStored || utilityItem == grabbable)
                         {
-                            LogInfo(player, "PlayerControllerB.GrabObjectServerRpc", $"itemName:{grabbable.itemProperties.itemName}", $"heldByPlayerOnServer:{(grabbable.heldByPlayerOnServer ? grabbable.playerHeldBy?.playerUsername : "false")}", $"Distance:{Vector3.Distance(player.transform.position, grabbable.transform.position)}");
-                            bool ban = false;
-
-                            GrabbableObject currentSlotItem = null;
-                            if (player.currentItemSlot >= 0 && player.currentItemSlot < player.ItemSlots.Length)
+                            player.GrabObjectClientRpc(false, grabbedObject);
+                            return false;
+                        }
+                        if (utilityItem != null && (!IsOwnedInventoryItem(player, utilityItem) ||
+                            utilityItem == grabbable || !seenItems.Add(utilityItem)))
+                        {
+                            inventoryConsistent = false;
+                        }
+                        var regularSlotsFull = allSlotsFull;
+                        if (FirstEmptyItemSlotWithItem != null)
+                        {
+                            try
                             {
-                                currentSlotItem = player.ItemSlots[player.currentItemSlot];
+                                allSlotsFull = (int)FirstEmptyItemSlotWithItem.Invoke(player, new object[] { grabbable }) < 0;
                             }
-
-                            var holdingTwoHanded =
-                                (player.currentlyHeldObjectServer != null && player.currentlyHeldObjectServer.itemProperties.twoHanded) ||
-                                (currentSlotItem != null && currentSlotItem.itemProperties.twoHanded);
-                            var holdingJetpack =
-                                player.currentlyHeldObjectServer is JetpackItem ||
-                                currentSlotItem is JetpackItem;
-                            var holdingOneHandedWhileTwoHandedEquipped = holdingTwoHanded && !grabbable.itemProperties.twoHanded;
-                            var heldItemName = player.currentlyHeldObjectServer != null
-                                ? player.currentlyHeldObjectServer.itemProperties.itemName
-                                : (currentSlotItem != null ? currentSlotItem.itemProperties.itemName : "unknown");
-                            var jetpackTwoHandGrabSuppressed = holdingJetpack && grabbable.itemProperties.twoHanded && !hasTwoHanded;
-                            var twoHandDetected =
-                                holdingOneHandedWhileTwoHandedEquipped ||
-                                (grabbable.itemProperties.twoHanded && hasTwoHanded) ||
-                                (grabbable.itemProperties.twoHanded && hasJetpack) ||
-                                (hasTwoHanded && hasJetpack);
-
-                            if (twoHandDetected)
+                            catch (TargetInvocationException ex)
                             {
-                                if (PluginConfig.GrabObject_SendLog.Value && !jetpackTwoHandGrabSuppressed)
-                                {
-                                    ShowMessage(locale.Msg_GetString("GrabObject_TwoHand", new System.Collections.Generic.Dictionary<string, string>()
-                                    {
-                                        { "{player}", player.playerUsername },
-                                        { "{heldItemName}", heldItemName },
-                                        { "{itemName}", grabbable.itemProperties.itemName },
-                                        { "{hasTwoHand}", hasTwoHanded.ToString() },
-                                        { "{jetpack}", hasJetpack.ToString() }
-                                    }));
-                                }
-
-                                if (PluginConfig.GrabObject_TwoHand.Value)
-                                {
-                                    ban = true;
-                                }
+                                LogInfo(player, "PlayerControllerB.GrabObjectServerRpc", $"Slot lookup failed: {ex.InnerException?.Message}");
+                                // Vanilla would repeat the failing lookup after changing object ownership.
+                                player.GrabObjectClientRpc(false, grabbedObject);
+                                return false;
                             }
+                        }
 
-                            var moreSlotDetected = allSlotsFull && !ban;
-                            if (moreSlotDetected && PluginConfig.GrabObject_SendLog.Value)
+                        LogInfo(player, "PlayerControllerB.GrabObjectServerRpc", $"itemName:{grabbable.itemProperties.itemName}",
+                            $"full:{allSlotsFull}", $"inventoryConsistent:{inventoryConsistent}",
+                            $"slot:{player.currentItemSlot}", $"utilityOccupied:{utilityItem != null}",
+                            $"Distance:{Vector3.Distance(player.transform.position, grabbable.transform.position)}");
+                        bool ban = false;
+
+                        var heldItemName = player.currentlyHeldObjectServer?.itemProperties?.itemName ?? "unknown";
+                        // A one-handed jetpack can be pocketed normally. Its presence proves nothing.
+                        var jetpackTwoHandGrabSuppressed = hasJetpack &&
+                            grabbable.itemProperties.twoHanded && !hasTwoHandedWithoutJetpack;
+                        var twoHandDetected = inventoryConsistent &&
+                            (IsHoldingTwoHandedItem(player) ||
+                             (grabbable.itemProperties.twoHanded && hasTwoHandedWithoutJetpack));
+                        var twoHandBlocked = twoHandDetected && PluginConfig.GrabObject_TwoHand.Value;
+
+                        if (twoHandDetected)
+                        {
+                            if (PluginConfig.GrabObject_SendLog.Value && !jetpackTwoHandGrabSuppressed)
                             {
-                                ShowMessage(locale.Msg_GetString("GrabObject_MoreSlot", new System.Collections.Generic.Dictionary<string, string>()
+                                ShowMessage(locale.Msg_GetString("GrabObject_TwoHand", new System.Collections.Generic.Dictionary<string, string>()
                                 {
                                     { "{player}", player.playerUsername },
-                                    { "{itemName}", grabbable.itemProperties.itemName }
+                                    { "{heldItemName}", heldItemName },
+                                    { "{itemName}", grabbable.itemProperties.itemName },
+                                    { "{hasTwoHand}", hasTwoHandedWithoutJetpack.ToString() },
+                                    { "{jetpack}", hasJetpack.ToString() }
                                 }));
                             }
 
-                            if (PluginConfig.GrabObject_MoreSlot.Value && !ban)
+                            if (twoHandBlocked)
                             {
-                                ban = allSlotsFull;
+                                ban = true;
+                            }
+                        }
+
+                        // A contradictory snapshot is not a confirmed overflow.
+                        // Reject safely without accusing/kicking while native routing has no space.
+                        var moreSlotDetected = allSlotsFull && regularSlotsFull && inventoryConsistent && !ban;
+                        if (moreSlotDetected && PluginConfig.GrabObject_SendLog.Value)
+                        {
+                            ShowMessage(locale.Msg_GetString("GrabObject_MoreSlot", new System.Collections.Generic.Dictionary<string, string>()
+                            {
+                                { "{player}", player.playerUsername },
+                                { "{itemName}", grabbable.itemProperties.itemName }
+                            }));
+                        }
+
+                        if (PluginConfig.GrabObject_MoreSlot.Value && !ban)
+                        {
+                            ban = allSlotsFull;
+                        }
+
+                        if (ban)
+                        {
+                            player.GrabObjectClientRpc(false, grabbedObject);
+                            if (PluginConfig.GrabObject_Kick.Value && (twoHandBlocked || moreSlotDetected))
+                            {
+                                KickPlayer(player);
+                            }
+                            return false;
+                        }
+
+                        var syncedWorldPosition = player.transform.parent != null
+                            ? player.transform.parent.TransformPoint(player.serverPlayerPosition)
+                            : player.serverPlayerPosition;
+                        if (Vector3.Distance(grabbable.transform.position, syncedWorldPosition) > 100 &&
+                            Vector3.Distance(grabbable.transform.position, player.transform.position) > 100 &&
+                            !StartOfRound.Instance.shipIsLeaving &&
+                            StartOfRound.Instance.shipHasLanded)
+                        {
+                            if (player.teleportedLastFrame)
+                            {
+                                return true;
                             }
 
-                            if (ban)
+                            if (PluginConfig.GrabObject_SendLog.Value)
                             {
-                                if (PluginConfig.GrabObject_Kick.Value)
+                                ShowMessage(locale.Msg_GetString("GrabObject", new System.Collections.Generic.Dictionary<string, string>()
                                 {
-                                    KickPlayer(player);
-                                }
-
-                                ForceCancelGrab(target);
-                                return false;
+                                    { "{player}", player.playerUsername },
+                                    { "{object_position}", grabbable.transform.position.ToString() },
+                                    { "{player_position}", syncedWorldPosition.ToString() }
+                                }));
                             }
 
-                            if (Vector3.Distance(grabbable.transform.position, player.serverPlayerPosition) > 100 &&
-                                !StartOfRound.Instance.shipIsLeaving &&
-                                StartOfRound.Instance.shipHasLanded)
+                            player.GrabObjectClientRpc(false, grabbedObject);
+                            if (PluginConfig.GrabObject_Kick.Value)
                             {
-                                if (player.teleportedLastFrame)
-                                {
-                                    return true;
-                                }
-
-                                if (PluginConfig.GrabObject_SendLog.Value)
-                                {
-                                    ShowMessage(locale.Msg_GetString("GrabObject", new System.Collections.Generic.Dictionary<string, string>()
-                                    {
-                                        { "{player}", player.playerUsername },
-                                        { "{object_position}", grabbable.transform.position.ToString() },
-                                        { "{player_position}", player.serverPlayerPosition.ToString() }
-                                    }));
-                                }
-
-                                if (PluginConfig.GrabObject_Kick.Value)
-                                {
-                                    KickPlayer(player);
-                                }
-
-                                ForceCancelGrab(target);
-                                return false;
+                                KickPlayer(player);
                             }
+
+                            return false;
                         }
                     }
                 }
@@ -180,17 +238,24 @@ namespace AntiCheat.Patches
             return true;
         }
 
-        private static void ForceCancelGrab(NetworkBehaviour target)
+        private static bool IsOwnedInventoryItem(PlayerControllerB player, GrabbableObject item)
         {
-            FieldInfo rpcExecStage = typeof(NetworkBehaviour).GetField("__rpc_exec_stage", BindingFlags.NonPublic | BindingFlags.Instance);
-            rpcExecStage.SetValue(target, 1);
-            typeof(PlayerControllerB).GetMethod("GrabObjectServerRpc", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(
-                (PlayerControllerB)target,
-                new object[]
-                {
-                    default(NetworkObjectReference)
-                });
-            rpcExecStage.SetValue(target, 0);
+            return item != null && item.itemProperties != null && item.heldByPlayerOnServer && item.playerHeldBy == player;
+        }
+
+        private static bool IsHoldingTwoHandedItem(PlayerControllerB player)
+        {
+            var held = player.currentlyHeldObjectServer;
+            if (!player.twoHanded || !IsOwnedInventoryItem(player, held) || !held.itemProperties.twoHanded)
+            {
+                return false;
+            }
+            if (player.currentItemSlot == 50)
+            {
+                return UtilitySlot?.GetValue(player) as GrabbableObject == held;
+            }
+            return player.ItemSlots != null && player.currentItemSlot >= 0 && player.currentItemSlot < player.ItemSlots.Length &&
+                player.ItemSlots[player.currentItemSlot] == held;
         }
     }
 }

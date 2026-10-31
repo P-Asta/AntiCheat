@@ -1,42 +1,8 @@
-using AntiCheat.Utils;
-
-using BepInEx;
-using BepInEx.Configuration;
-
-using GameNetcodeStuff;
-
 using HarmonyLib;
 
-using Netcode.Transports.Facepunch;
-
-using Steamworks;
-using Steamworks.Data;
-using Steamworks.ServerList;
-
-using System;
-using System.CodeDom;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
-using TMPro;
-
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Netcode;
-
-using UnityEngine;
-using UnityEngine.Events;
-
-using static UnityEngine.GraphicsBuffer;
 
 using static AntiCheat.Patches.PatchHelper;
 
@@ -57,39 +23,69 @@ namespace AntiCheat.Patches
         [HarmonyWrapSafe]
         public static bool __rpc_handler_2988305002(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
         {
-            if (Check(rpcParams, out var p))
+            if (!Check(rpcParams, out var player))
             {
-                if (PluginConfig.GrabObject.Value)
-                {
-                    reader.ReadValueSafe(out NetworkObjectReference netObjectRef, default);
-                    ByteUnpacker.ReadValueBitPacked(reader, out int playerWhoAdded);
-                    reader.Seek(0);
-                    if (netObjectRef.TryGet(out NetworkObject networkObject, null))
-                    {
-                        GrabbableObject component = networkObject.GetComponent<GrabbableObject>();
-                        if (!component.itemProperties.isScrap && !component.isHeld && !component.isHeldByEnemy && component.itemProperties.itemId != 123984 && component.itemProperties.itemId != 819501)
-                        {
-                            return true;
-                        }
-                        if (PluginConfig.GrabObject_SendLog.Value)
-                        {
-                            ShowMessage(locale.Msg_GetString("GrabObject_BeltBag", new Dictionary<string, string>()
-                            {
-                                { "{player}", p.playerUsername },
-                                { "{itemName}", component.itemProperties.itemName }
-                            }));
-                        }
-
-                        if (PluginConfig.GrabObject_BeltBag.Value)
-                        {
-                            ((BeltBagItem)target).CancelAddObjectToBagClientRpc(playerWhoAdded);
-                            return false;
-                        }
-                    }
-                }
+                return player != null;
             }
-            else if (p == null)
+            if (!PluginConfig.GrabObject.Value)
             {
+                return true;
+            }
+
+            NetworkObjectReference netObjectRef;
+            int playerWhoAdded;
+            int readerPosition = reader.Position;
+            try
+            {
+                reader.ReadValueSafe(out netObjectRef, default);
+                ByteUnpacker.ReadValueBitPacked(reader, out playerWhoAdded);
+            }
+            finally
+            {
+                reader.Seek(readerPosition);
+            }
+
+            int senderPlayerIndex = (int)player.playerClientId;
+            if (playerWhoAdded != senderPlayerIndex)
+            {
+                // The native RPC permits non-owners, but uses this index for cancellation.
+                ((BeltBagItem)target).CancelAddObjectToBagClientRpc(senderPlayerIndex);
+                return false;
+            }
+
+            if (!netObjectRef.TryGet(out NetworkObject networkObject, null) || networkObject == null)
+            {
+                return true;
+            }
+
+            GrabbableObject component = networkObject.GetComponent<GrabbableObject>();
+            // Native validation cancels missing objects and ordinary pickup/bag contention.
+            if (component == null || component.isHeld || component.isHeldByEnemy || component.heldByPlayerOnServer)
+            {
+                return true;
+            }
+            if (component.itemProperties == null)
+            {
+                ((BeltBagItem)target).CancelAddObjectToBagClientRpc(senderPlayerIndex);
+                return false;
+            }
+
+            if (!component.itemProperties.isScrap && component.itemProperties.itemId != 123984 && component.itemProperties.itemId != 819501)
+            {
+                return true;
+            }
+            if (PluginConfig.GrabObject_SendLog.Value)
+            {
+                ShowMessage(locale.Msg_GetString("GrabObject_BeltBag", new Dictionary<string, string>()
+                {
+                    { "{player}", player.playerUsername },
+                    { "{itemName}", component.itemProperties.itemName }
+                }));
+            }
+
+            if (PluginConfig.GrabObject_BeltBag.Value)
+            {
+                ((BeltBagItem)target).CancelAddObjectToBagClientRpc(senderPlayerIndex);
                 return false;
             }
             return true;

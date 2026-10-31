@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Match the existing real Harmony regression runtime. -->
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(StaminaEventTargets)' == '' Or '$(StaminaEventTargets)' == 'all'">
+    <DefineConstants>$(DefineConstants);STAMINA_EVENTS_ALL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(StaminaEventTargets)' == 'mixed'">
+    <DefineConstants>$(DefineConstants);STAMINA_EVENTS_MIXED</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../AntiCheat/Patches/Features/PlayerMovement/StaminaObservationPatch.cs" Link="StaminaObservationPatch.cs" />
+    <Compile Include="../../AntiCheat/Utils/SprintSuspicionTracker.cs" Link="SprintSuspicionTracker.cs" />
+    <PackageReference Include="HarmonyX" Version="2.10.1" />
+  </ItemGroup>
+</Project>

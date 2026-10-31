@@ -1,7 +1,5 @@
 using GameNetcodeStuff;
 
-using HarmonyLib;
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,13 +10,9 @@ using static AntiCheat.Patches.PatchHelper;
 
 namespace AntiCheat.Patches
 {
-    [HarmonyPatch(typeof(PlayerControllerB))]
-    [HarmonyWrapSafe]
     public static class PlayerControllerMovementPatch
     {
-        [HarmonyPatch(typeof(PlayerControllerB), "__rpc_handler_2013428264")]
-        [HarmonyPrefix]
-        [HarmonyWrapSafe]
+        // Registered only when its legacy handler exists; see LegacyRpcCompatibilityPatch.
         public static bool UpdatePlayerPositionServerRpc(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
         {
             reader.ReadValueSafe(out Vector3 newPos);

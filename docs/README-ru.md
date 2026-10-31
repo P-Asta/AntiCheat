@@ -1,24 +1,25 @@
-# Античит
+# AstaAntiCheat
 
-[![Thunderstore Version](https://img.shields.io/thunderstore/v/chuxiaaaa/AntiCheat?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/chuxiaaaa/AntiCheat/versions/)
-[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/chuxiaaaa/AntiCheat?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/chuxiaaaa/AntiCheat/)
+**AstaAntiCheat — форк [chuxiaaaa/AntiCheat](https://github.com/chuxiaaaa/AntiCheat), поддерживаемый P-Asta.** Оригинал: [Thunderstore](https://thunderstore.io/c/lethal-company/p/chuxiaaaa/AntiCheat/).
 
-[**简体中文(Support)**](https://github.com/chuxiaaaa/AntiCheat/blob/main/README.md) | [**English(Support)**](https://github.com/chuxiaaaa/AntiCheat/blob/main/docs/README-en.md) | **Русский** | [**한국어(Support)**](https://github.com/chuxiaaaa/AntiCheat/blob/main/docs/README-ko.md)
+Здесь сохранены описания функций и сведения об участниках оригинального проекта. Изменения форка и пределы проверки описаны в [основном README](../README.md). Проверки зависят от настроек и не гарантируют защиту от всех читов. Мод нужен только хосту. Перед установкой отключите или удалите оригинальный AntiCheat: оба мода используют одинаковый GUID. Оригинал не является зависимостью. Для совместимости сохранены `AntiCheat.cfg` и внутренний GUID плагина.
+
+[**简体中文**](README-zh-CN.md) | [**English**](README-en.md) | **Русский** | [**한국어**](README-ko.md)
 
 Античит-мод для Lethal Company (только для хоста)
 
-Язык по умолчанию - упрощенный китайский. Вы можете переключиться на английский, изменив значение Language на "en_us" в файле конфигурации.
+Язык выбирается через `current_language` в `BepInEx/plugins/AstaAntiCheat/locales/localization_cfg.json`: `en_US`, `ko_KR` или `zh_CN`. Пустое значение включает автоматический выбор по языку системы.
 
 ### Введение
 
-Этот мод используется для решения проблемы читерства на публичных серверах, гарантируя приятный игровой опыт для всех игроков.
+Мод предоставляет хосту настраиваемые проверки подозрительных действий в публичном лобби.
 
-При использовании мода вы можете столкнуться с "ложными срабатываниями", но это может быть не обязательно проблема с античит-модом. Для устранения неполадок, пожалуйста, попробуйте удалить все моды, кроме BepInEx и AntiCheat, и попытайтесь воспроизвести проблему. Если проблема больше не возникает, вероятно, это ошибка совместимости с другим модом.
+При ложных срабатываниях попробуйте воспроизвести проблему в отдельном тестовом профиле, включив только BepInEx и AstaAntiCheat. Если проблема возникает только после добавления другого мода, она может быть связана с совместимостью.
 
 ### Установка
 
-1. Установите [BepInExPack](https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack);
-2. Поместите AntiCheat.dll в папку Lethal Company\BepInEx\plugins;
+1. Установите [BepInExPack 5.4.2305](https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/);
+2. Отключите или удалите оригинальный AntiCheat, включая `AntiCheat.dll`. Скопируйте папку `BepInEx` из архива в папку игры. `AstaAntiCheat.dll` и вся папка `locales` должны находиться вместе в `BepInEx/plugins/AstaAntiCheat/`.
 3. Запустите игру. После запуска игры вы можете найти файл конфигурации AntiCheat.cfg в директории Lethal Company\BepInEx\config.
 
 ### Создание лобби
@@ -58,7 +59,7 @@
 
 ### Обратная связь
 
-Если вы столкнулись с ложным срабатыванием и можете подтвердить, что это не вызвано другим модом, пожалуйста, сообщите о проблеме на моем GitHub, объяснив, как воспроизвести проблему. Это поможет нам ее исправить!
+Сообщайте о проблемах форка в [P-Asta/AntiCheat](https://github.com/P-Asta/AntiCheat/issues), приложив шаги воспроизведения, версии игры и модов, настройки и соответствующие логи.
 
 ### Поддержка
 

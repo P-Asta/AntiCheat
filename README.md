@@ -1,226 +1,84 @@
-# AntiCheat
+# AstaAntiCheat
 
-[![Thunderstore Version](https://img.shields.io/thunderstore/v/chuxiaaaa/AntiCheat?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/chuxiaaaa/AntiCheat/versions/)
-[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/chuxiaaaa/AntiCheat?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/chuxiaaaa/AntiCheat/)
+**English** | [한국어](docs/README-ko.md)
 
-**简体中文(Support)** | [**English(Support)**](https://github.com/chuxiaaaa/AntiCheat/blob/main/docs/README-en.md) | [**Русский**](https://github.com/chuxiaaaa/AntiCheat/blob/main/docs/README-ru.md) | [**한국어(Support)**](https://github.com/chuxiaaaa/AntiCheat/blob/main/docs/README-ko.md)
+A host-side anti-cheat mod for Lethal Company, forked from [chuxiaaaa/AntiCheat](https://github.com/chuxiaaaa/AntiCheat) and maintained by [P-Asta](https://github.com/P-Asta).
 
-一个致命公司反作弊主机端模组
+AstaAntiCheat provides configurable checks for player actions and game requests. Only the host needs to install it; joining players do not need the mod.
 
-## i18国际化
+## Features
 
-在 0.8.2 版本以后，反作弊支持完全自定义提示内容
+- Inventory checks for pickup distance, available slots, two-handed items and belt bags.
+- Purchase, credit, moon-route and chat-author validation, including malformed request handling.
+- Configurable checks for combat, item use, ship controls and world interactions.
+- Detection messages, optional kicks for supported checks, and player action logs.
+- Custom lobby prefixes, join messages and localized notifications.
+- Host-only notices for repeated unusually long sprints.
 
-### 指定使用语言文件
-  1. 在 AntiCheat 文件目录下找到 locales 文件夹，打开 localization_cfg.json 文件
-  2. 修改 ``current_language`` 的值
-      - 如果为空，反作弊将会根据系统语言自动设置为 zh_CN/en_US
-      - 如果想指定，请将值设定为 en_US/zh_CN
+### Changes in this fork
 
-### 创建新语言文件
-  1. 复制 en_US.json 文件
-  2. 修改文件名，将其修改为你的语言文件名称，例如 en_US.json -> zh_CN.json
-  3. 更改文件内容，修改完毕后将 ``localization_cfg.json`` 中 ``current_language`` 的值
-  4. (可选)在 Github 中提交pull request，说明并提交你的语言文件
+- Improved native utility-slot handling and one-handed jetpack compatibility.
+- Reduced false positives from simultaneous grabs and inconsistent inventory state.
+- Improved request validation, notification handling and compatibility with missing legacy game methods.
+- Added repeated-sprint observations with exclusions for TZP effects, damage-related stamina recovery and uncertain movement.
 
-## 简介
+Sprint notices are informational and never kick players or block movement. They do not prove that BetterStamina or another stamina mod is installed. See the [changelog](thunderstore/CHANGELOG.md) for release details.
 
-该模组用于解决外挂炸房问题，确保路人房玩家的游戏体验
+## Installation
 
-在使用模组时你可能会遇到"误检测"问题，但这并不一定是 反作弊 模组的问题，请尝试删除 除了（BepInExPack，汉化，反作弊，多人联机）以外的所有模组复现问题（如不再误测，则是模组的兼容性问题）
+1. Install [BepInExPack](https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/) (package dependency: `5.4.2305`).
+2. Disable or remove the original AntiCheat. For a manual installation, remove its `AntiCheat.dll`.
+3. Extract the release ZIP's `BepInEx` folder into the game directory, keeping the DLL and localization files together as shown below.
+4. Launch the game and host a lobby.
 
-## 使用说明
+```text
+BepInEx/plugins/AstaAntiCheat/
+├─ AstaAntiCheat.dll
+└─ locales/
+   ├─ en_US.json
+   ├─ ko_KR.json
+   ├─ zh_CN.json
+   └─ localization_cfg.json
+```
 
-1. 安装 [BepInExPack](https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack) 模组
-2. 将 AntiCheat.dll 放置于 Lethal Company\BepInEx\plugins\ 目录下
-3. 启动游戏
+The original AntiCheat is not a dependency. Both mods use the same plugin ID, so they must not be installed together. Existing `AntiCheat.cfg` settings remain compatible.
 
-## 创建房间
+## Configuration
 
-使用反作弊时，建议您在房间名标注 [AC] 字样，向其他玩家标识这是一个启用反作弊的房间！
-例如：[v69/AC] 战斗爽！
+Launch the game once to generate `BepInEx/config/AntiCheat.cfg`. Enable checks and configure their available notification and kick options in this file.
 
-## 功能
+| Setting | Description |
+| --- | --- |
+| `[DetectedMessageType] Type` | `GUI`, `HostChat` or `PublicChat`. Default: `PublicChat`. |
+| `[RpcValidationSetting] Enable` | Invalid-request checks. Default: `true`. |
+| `[RpcValidationSetting] Kick` | Kicks for invalid requests. Default: `false`; other checks have their own settings. |
+| `[StaminaObservationSetting] Enable` | Repeated-sprint notices. Default: `true`; always local host chat, with no kick option. |
 
-### 检测
+Unreadable request formats and unsafe indices are still rejected silently when the additional request checks are disabled. The sprint observer clears evidence around TZP use and residual effects, damage, and uncertain movement. It can miss modified stamina and can produce false positives.
 
-- **防踢检测**
+### Language
 
-  描述：检测玩家是否开启防踢功能加入游戏房间
+Edit `BepInEx/plugins/AstaAntiCheat/locales/localization_cfg.json` and set `current_language` to `en_US`, `ko_KR` or `zh_CN`. Leave it empty to select a language from the system locale.
 
-- **拉杆检测**
+To add a translation, copy `en_US.json`, translate its messages while preserving the keys and placeholders, and set `current_language` to the new filename without `.json`.
 
-  - 强制拉杆检测
+## Compatibility
 
-    描述：检测新进房间的玩家进行拉杆
+The current changes were checked against v81 game code. Some legacy checks are skipped when their game methods are unavailable. This mod cannot detect every cheat or guarantee compatibility with every mod; live multiplayer validation of the latest changes is still pending.
 
-  - 起飞拉杆检测
+For false positives, try a separate profile with only BepInEx and AstaAntiCheat. Include reproduction steps, game and mod versions, relevant settings and logs when [reporting an issue](https://github.com/P-Asta/AntiCheat/issues).
 
-    描述：当飞船着陆后，检测玩家拉杆是否符合条件（在配置文件中修改）
+## Contributing
 
-  - 降落拉杆检测
+Bug reports, translations and pull requests are welcome. Technical notes are available in the [inventory validation audit](docs/grab-validation-audit-ko.md) and [request and sprint observation audit](docs/rpc-validation-audit-ko.md) (Korean). Regression projects are in [tests](tests/).
 
-    描述：飞船在轨道时，检测玩家拉杆是否符合条件（在配置文件中修改）
+## Credits
 
-- **飞船物品位置异常检测**
+- Original mod: [chuxiaaaa/AntiCheat](https://github.com/chuxiaaaa/AntiCheat) and its [contributors](https://github.com/chuxiaaaa/AntiCheat/graphs/contributors).
+- Fork maintenance and Korean translation: [P-Asta](https://github.com/P-Asta).
+- In-game translations: Chinese — chuxiaaaa, CoolLKKPS; English — DeathWrench, CoolLKKPS, glyphical; Korean — P-Asta.
+- Original README translations: Chinese — chuxiaaaa, CoolLKKPS; English — NilaierMusic, CoolLKKPS; Russian — NilaierMusic; Korean — P-Asta.
 
-  描述：检测飞船物品坐标是否在飞船范围内
+Thanks to the original testers: 超级骇人鲸, Alan Backer, 沈阳最速傳說疾走の猛虎！貴物刀一郎, 柒小鸭 yz, 喜欢睡觉の极茶龙, 东南枝, Melissa and 我不吃牛肉.
 
-- **物品使用冷却异常检测**
-
-  描述：检测挥铲速度以及击发霰弹枪的速度
-
-- **灯关秀检测**
-
-  描述：检测玩家是否频繁切换灯光
-
-- **终端噪音检测**
-
-  描述：检测玩家是否导致终端发出大量噪音
-
-- **销毁物品检测**
-
-  描述：检测玩家销毁不应该被销毁的物品
-
-- **发言伪造检测**
-
-  描述：检测玩家是否以其他玩家的身份发言
-
-- **刷假人检测**
-
-  描述：检测玩家是否通过面具多次生成假人
-
-- **刷礼物盒检测**
-
-  描述：检测礼物盒开启次数
-
-- **刷蜘蛛网检测**
-
-  描述：检测玩家调用蜘蛛生成大量蜘蛛网
-
-- **激怒机枪检测**
-
-  描述：检测玩家是否远距离导致机枪狂暴
-
-- **隐身检测**
-
-  描述：检测玩家是否隐身
-
-- **喷气背包爆炸检测**
-
-  描述：检测玩家是否引爆其他玩家的喷气背包
-
-- **引爆地雷检测**
-
-  描述：检测玩家是否恶意引爆地雷
-
-- **怪物异常检测**
-
-  描述：检测玩家是否控怪以及修改怪物机制
-
-- **小地图检测**
-
-  描述：检测玩家是否安装小地图模组
-
-- **击杀敌人检测**
-
-  描述：检测玩家是否远距离击杀敌人
-
-- **隔空取物检测**
-
-  描述：检测玩家是否远距离拿取物品
-
-- **铲子伤害异常检测**
-
-  描述：检测玩家使用铲子时的伤害
-
-- **玩家名字检测**
-
-  描述：出现玩家名字异常时提示，例如 Nameless 或 Unknown
-
-- **零元购检测**
-
-  描述：检测玩家是否免费购买物品、免费解锁飞船装饰以及免费导航至付费星球
-
-- **无限子弹检测**
-
-  描述：检测玩家使用霰弹枪时是否有子弹
-
-- **召唤老板检测**
-
-  描述：检测玩家调用老板攻击函数
-
-- **远程终端检测**
-
-  描述：检测玩家是否远程使用终端
-
-- **怪物击杀玩家检测**
-
-  描述：检测玩家是否调用怪物的击杀函数击杀其他玩家
-
-- **重复加入游戏检测**
-
-  描述：检测玩家已经在房间的时候继续加入房间
-
-* [ ] **速度检测**
-
-  描述：检测玩家当前以异常的速度行走或奔跑(等待解决，目前没有思路)
-
-* [ ] **飞行检测**
-
-  描述：检测玩家不借助任何物品进行飞行(等待解决，目前没有思路)
-
-### 其他功能
-
-- **房间名称前缀**
-
-  描述：默认为 AC，用于标识房间使用安装反作弊，你可以通过修改配置来更改标识或者设置为空取消标识。
-
-- **加入游戏提示**
-
-  描述：由于游戏原版加入提示过于混乱，所以反作弊取消了原版加入提示，你可以在配置中自定义玩家加入游戏的提示。
-
-- **玩家操作信息**
-
-  描述：显示玩家操作信息(加入房间/购买物品/切换星球/拔下电源)
-
-- **允许客户端配置差异**
-
-  描述：允许客户端存在模组差异，有助于缓解客户端无法加入房间的问题
-
-## 贡献
-
-<a href="https://github.com/chuxiaaaa/AntiCheat/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=chuxiaaaa/AntiCheat" />
-</a>
-
-### 游戏语言
-
-- 中文 (chuxiaaaa & CoolLKKPS)
-- 英文 (DeathWrench & CoolLKKPS & glyphical)
-- 韩文 (P-Asta)
-
-### 自述语言
-
-- 中文 (chuxiaaaa & CoolLKKPS)
-- 英文 (NilaierMusic & CoolLKKPS)
-- 俄文 (NilaierMusic)
-- 韩文 (P-Asta)
-
-### 模组测试人员
-
-- 超级骇人鲸
-- Alan Backer
-- 沈阳最速傳說疾走の猛虎！貴物刀一郎
-- 柒小鸭 yz
-- 喜欢睡觉の极茶龙
-- 东南枝
-- Melissa
-- 我不吃牛肉
-- Aueser
-
-欢迎各位有能力的开发者为本模组提交贡献~
-
-## 反馈
-
-如果你遇到误检测并确定不是模组导致，你可以提交 issue 来说明如何复现问题帮助我们修复问题！
+The original [Simplified Chinese](docs/README-zh-CN.md) and [Russian](docs/README-ru.md) documentation is also preserved.

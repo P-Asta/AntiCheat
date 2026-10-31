@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../AntiCheat/Patches/Features/PlayerMovement/StaminaObservationPatch.cs" Link="StaminaObservationPatch.cs" />
+    <Compile Include="../../AntiCheat/Utils/SprintSuspicionTracker.cs" Link="SprintSuspicionTracker.cs" Condition="Exists('../../AntiCheat/Utils/SprintSuspicionTracker.cs')" />
+  </ItemGroup>
+</Project>

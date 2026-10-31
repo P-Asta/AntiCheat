@@ -1,5 +1,7 @@
 {
     "Config": {
+        "StaminaObservation": "Privately notify the host after three separate unusually long sprints with sufficient observed travel. Reset observations for TZP, damage or uncertain state. This is suspicion only; never blocks or kicks.",
+        "RpcValidation": "Block and report invalid purchase/moon IDs, negative credits, malformed purchase/chat requests and chat sender impersonation. Unreadable requests are silently rejected even when disabled. Does not estimate stamina.",
         "Boss": "Detects when a player attempts to force the company monster to attack.",
         "ChangToFreeMoon": "Detects when a player routing moon from priced to free",
         "ChatReal": "Detects when a player attempts to spoof their name as another player's.",
@@ -60,6 +62,14 @@
         "refuse_connect": "{steamId} attempted to connect to the game but was refused! (Already kicked)"
     },
     "Message": {
+        "StaminaSuspicion": "[Observation] {player} (client {id}) completed 3 unusually long sprint episodes beyond the generous observation limits. This is not proof of stamina modification; check other mods and synchronization. No automatic action was taken.",
+        "RpcRejected": "Blocked {rpc} from {player} (client {id}): {reason}",
+        "RpcInvalidIndex": "invalid target ID",
+        "RpcInvalidCredits": "negative credit request",
+        "RpcInvalidCount": "invalid delivery item count",
+        "RpcMalformedPayload": "malformed request or invalid encoded length",
+        "RpcChatIdentity": "chat author does not match the sender",
+        "RpcInvalidChat": "invalid chat format or length",
         "behind_player": "<color=yellow>[{player}] <color=red>was left behind.</color></color>",
         "Boss": "{player} detected attempting to force the company monster to attack!",
         "ChangeLevel": "{player} was detected routing moon from priced to free! (Insufficient permissions)",

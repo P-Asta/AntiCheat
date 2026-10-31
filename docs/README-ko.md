@@ -1,237 +1,84 @@
-# AntiCheat
+# AstaAntiCheat
 
-[![Thunderstore Version](https://img.shields.io/thunderstore/v/chuxiaaaa/AntiCheat?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/chuxiaaaa/AntiCheat/versions/)
-[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/chuxiaaaa/AntiCheat?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/lethal-company/p/chuxiaaaa/AntiCheat/)
+[English](../README.md) | **한국어**
 
-[**简体中文(Support)**](https://github.com/chuxiaaaa/AntiCheat/blob/main/README.md) | [**English(Support)**](https://github.com/chuxiaaaa/AntiCheat/blob/main/docs/README-en.md) | [**Русский**](https://github.com/chuxiaaaa/AntiCheat/blob/main/docs/README-ru.md) | **한국어(Support)**
+[chuxiaaaa/AntiCheat](https://github.com/chuxiaaaa/AntiCheat)를 기반으로 [P-Asta](https://github.com/P-Asta)가 관리하는 Lethal Company 호스트용 안티치트 포크입니다.
 
-리썰 컴퍼니 안티치트 호스트 모드
-
-## i18 국제화
-
-0.8.2 버전 이후부터 안티치트는 메시지 내용의 완전한 사용자 정의를 지원합니다.
-
-### 언어 파일 지정 사용
-
-1. AntiCheat 파일 디렉토리에서 locales 폴더를 찾아 localization_cfg.json 파일을 엽니다
-2. `current_language` 값을 수정합니다
-   - 비어있으면 안티치트는 시스템 언어에 따라 자동으로 zh_CN/en_US로 설정됩니다
-   - 지정하려면 값을 en_US/zh_CN/ko_KR로 설정하세요
-
-### 새 언어 파일 생성
-
-1. en_US.json 파일을 복사합니다
-2. 파일명을 수정하여 원하는 언어 파일명으로 변경합니다 (예: en_US.json -> ko_KR.json)
-3. 파일 내용을 변경하고 완료 후 `localization_cfg.json`에서 `current_language` 값을 수정합니다
-4. (선택사항) Github에서 pull request를 제출하여 언어 파일을 설명하고 제출하세요
-
-## 소개
-
-모드 교류 QQ 그룹: 263868521
-
-이 모드는 핵 사용으로 인한 방 파괴 문제를 해결하여 무작위 매칭 플레이어들의 게임 경험을 보장합니다.
-
-모드를 사용할 때 "오탐지" 문제가 발생할 수 있지만, 이것이 반드시 AntiCheat 모드의 문제는 아닙니다. (BepInExPack, 한국어화, 안티치트, 멀티플레이) 이외의 모든 모드를 삭제하고 문제를 재현해보세요 (더 이상 오탐지가 발생하지 않으면 모드 호환성 문제입니다).
-
-## 사용 방법
-
-1. [BepInExPack](https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack) 모드를 설치합니다
-2. AntiCheat.dll을 Lethal Company\BepInEx\plugins\ 디렉토리에 배치합니다
-3. 게임을 시작합니다
-
-## 방 생성
-
-안티치트를 사용할 때는 방 이름에 [AC] 표시를 추가하여 다른 플레이어들에게 이것이 안티치트가 활성화된 방임을 알리는 것을 권장합니다!
-예시: [v69/AC] 전투 재밌다!
+플레이어의 행동과 게임 요청을 검사하고, 설정에 따라 알림·차단·강퇴를 적용합니다. 호스트에만 설치하면 되며, 참여하는 플레이어에게는 모드가 필요하지 않습니다.
 
 ## 기능
 
-### 감지
+- 아이템 획득 거리, 빈 슬롯, 양손 아이템, 벨트 가방 검사
+- 구매·크레딧·행성 이동·채팅 작성자 검증 및 손상된 요청 처리
+- 전투·아이템 사용·함선 조작·월드 상호작용 검사
+- 감지 알림, 지원되는 검사별 강퇴 설정, 플레이어 행동 로그
+- 방 이름 접두사, 입장 메시지, 다국어 알림 설정
+- 비정상적으로 긴 질주가 반복될 때 호스트 전용 관찰 알림
 
-- **킥 방지 감지**
+### 이 포크의 변경점
 
-  설명: 플레이어가 킥 방지 기능을 켜고 게임 방에 참가하는지 감지합니다
+- 게임의 utility slot 처리와 한손 제트팩 호환성을 개선했습니다.
+- 동시 아이템 획득과 불일치한 인벤토리 상태로 인한 오탐을 줄였습니다.
+- 요청 검증과 알림 처리를 보완하고, 구형 게임 메서드가 없는 경우의 호환성을 개선했습니다.
+- TZP 효과, 피해로 인한 스태미나 회복, 불확실한 이동 상태를 제외하는 반복 질주 관찰을 추가했습니다.
 
-- **레버 감지**
+질주 관찰은 호스트에게 참고용으로 알리며 강퇴하거나 이동을 차단하지 않습니다. BetterStamina 등 특정 스태미나 모드의 설치를 증명하는 기능은 아닙니다. 버전별 변경 사항은 [변경 기록](../thunderstore/CHANGELOG.md)을 참고하세요.
 
-  - 강제 레버 감지
+## 설치
 
-    설명: 새로 방에 들어온 플레이어가 레버를 당기는 것을 감지합니다
+1. [BepInExPack](https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/)을 설치합니다. 패키지 의존성 버전은 `5.4.2305`입니다.
+2. 원본 AntiCheat를 비활성화하거나 제거합니다. 수동으로 설치했다면 기존 `AntiCheat.dll`을 제거합니다.
+3. 배포 ZIP의 `BepInEx` 폴더를 게임 폴더에 압축 해제합니다. 아래처럼 DLL과 언어 파일을 함께 배치하세요.
+4. 게임을 실행하고 호스트로 방을 만듭니다.
 
-  - 이륙 레버 감지
+```text
+BepInEx/plugins/AstaAntiCheat/
+├─ AstaAntiCheat.dll
+└─ locales/
+   ├─ en_US.json
+   ├─ ko_KR.json
+   ├─ zh_CN.json
+   └─ localization_cfg.json
+```
 
-    설명: 함선이 착륙한 후, 플레이어가 레버를 당기는 조건이 맞는지 감지합니다 (설정 파일에서 수정)
+원본 AntiCheat는 의존성이 아닙니다. 원본과 이 포크는 같은 플러그인 ID를 사용하므로 함께 설치하지 마세요. 기존 `AntiCheat.cfg` 설정은 계속 사용할 수 있습니다.
 
-  - 착륙 레버 감지
+## 설정
 
-    설명: 함선이 궤도에 있을 때, 플레이어가 레버를 당기는 조건이 맞는지 감지합니다 (설정 파일에서 수정)
+게임을 한 번 실행하면 `BepInEx/config/AntiCheat.cfg`가 생성됩니다. 각 검사의 활성화 여부와 지원되는 알림·강퇴 옵션을 이 파일에서 설정합니다.
 
-- **함선 아이템 위치 이상 감지**
+| 설정 | 설명 |
+| --- | --- |
+| `[DetectedMessageType] Type` | `GUI`(호스트 경고창), `HostChat`(호스트 채팅), `PublicChat`(공개 채팅). 기본값: `PublicChat`. |
+| `[RpcValidationSetting] Enable` | 비정상 요청 검사. 기본값: `true`. |
+| `[RpcValidationSetting] Kick` | 비정상 요청 시 강퇴. 기본값: `false`. 다른 검사는 각각의 설정을 따릅니다. |
+| `[StaminaObservationSetting] Enable` | 반복 질주 관찰 알림. 기본값: `true`. 항상 호스트 채팅에만 표시하며 강퇴 옵션은 없습니다. |
 
-  설명: 함선 아이템 좌표가 함선 범위 내에 있는지 감지합니다
+추가 요청 검사를 꺼도 게임이 읽을 수 없는 형식과 안전하지 않은 인덱스는 알림 없이 거절합니다. 질주 관찰은 TZP 사용·잔류 효과, 피해, 불확실한 이동 상태에서 누적 근거를 초기화합니다. 스태미나 변조를 놓치거나 정상 플레이를 의심하는 경우가 있을 수 있습니다.
 
-- **아이템 사용 쿨다운 이상 감지**
+### 언어
 
-  설명: 삽 휘두르는 속도와 샷건 발사 속도를 감지합니다
+`BepInEx/plugins/AstaAntiCheat/locales/localization_cfg.json`의 `current_language`를 `en_US`, `ko_KR`, `zh_CN` 중 하나로 설정합니다. 비워 두면 시스템 언어에 따라 선택합니다.
 
-- **조명 끄기 쇼 감지**
+새 번역을 추가하려면 `en_US.json`을 복사하고 키와 치환 문자를 유지한 채 메시지를 번역하세요. `current_language`에는 새 파일명에서 `.json`을 뺀 값을 지정합니다.
 
-  설명: 플레이어가 조명을 빈번히 전환하는지 감지합니다
+## 호환성
 
-- **터미널 소음 감지**
+현재 변경 사항은 v81 게임 코드를 기준으로 확인했습니다. 대상 게임 메서드가 없는 구형 검사는 건너뜁니다. 모든 치트나 모드 조합을 지원하지 않으며, 최신 변경 사항의 실제 멀티플레이 검증은 아직 완료되지 않았습니다.
 
-  설명: 플레이어가 터미널에서 대량의 소음을 발생시키는지 감지합니다
-
-- **아이템 파괴 감지**
-
-  설명: 플레이어가 파괴되어서는 안 되는 아이템을 파괴하는지 감지합니다
-
-- **발언 위조 감지**
-
-  설명: 플레이어가 다른 플레이어의 신분으로 발언하는지 감지합니다
-
-- **가짜 더미 생성 감지**
-
-  설명: 플레이어가 마스크를 통해 여러 번 가짜 더미를 생성하는지 감지합니다
-
-- **선물 상자 복제 감지**
-
-  설명: 선물 상자 열기 횟수를 감지합니다
-
-- **거미줄 생성 감지**
-
-  설명: 플레이어가 거미를 호출하여 대량의 거미줄을 생성하는지 감지합니다
-
-- **터렛 분노 감지**
-
-  설명: 플레이어가 원거리에서 터렛을 분노시키는지 감지합니다
-
-- **투명화 감지**
-
-  설명: 플레이어가 투명 상태인지 감지합니다
-
-- **제트팩 폭발 감지**
-
-  설명: 플레이어가 다른 플레이어의 제트팩을 폭발시키는지 감지합니다
-
-- **지뢰 폭발 감지**
-
-  설명: 플레이어가 악의적으로 지뢰를 폭발시키는지 감지합니다
-
-- **몬스터 이상 감지**
-
-  설명: 플레이어가 몬스터를 조종하거나 몬스터 메커니즘을 수정하는지 감지합니다
-
-- **미니맵 감지**
-
-  설명: 플레이어가 미니맵 모드를 설치했는지 감지합니다
-
-- **적 처치 감지**
-
-  설명: 플레이어가 원거리에서 적을 처치하는지 감지합니다
-
-- **원거리 아이템 수집 감지**
-
-  설명: 플레이어가 원거리에서 아이템을 수집하는지 감지합니다
-
-- **삽 피해 이상 감지**
-
-  설명: 플레이어가 삽을 사용할 때의 피해를 감지합니다
-
-- **플레이어 이름 감지**
-
-  설명: 플레이어 이름이 이상할 때 알림 (예: Nameless 또는 Unknown)
-
-- **무료 구매 감지**
-
-  설명: 플레이어가 아이템을 무료로 구매하거나, 함선 장식을 무료로 해금하거나, 유료 행성으로 무료 이동하는지 감지합니다
-
-- **무한 탄약 감지**
-
-  설명: 플레이어가 샷건 사용 시 탄약이 있는지 감지합니다
-
-- **보스 소환 감지**
-
-  설명: 플레이어가 보스 공격 함수를 호출하는지 감지합니다
-
-- **원격 터미널 감지**
-
-  설명: 플레이어가 원격으로 터미널을 사용하는지 감지합니다
-
-- **몬스터 플레이어 처치 감지**
-
-  설명: 플레이어가 몬스터의 처치 함수를 호출하여 다른 플레이어를 처치하는지 감지합니다
-
-- **중복 게임 참가 감지**
-
-  설명: 플레이어가 이미 방에 있는데 계속 방에 참가하는지 감지합니다
-
-* [ ] **속도 감지**
-
-  설명: 플레이어가 현재 비정상적인 속도로 걷거나 뛰는지 감지 (해결 대기 중, 현재 아이디어 없음)
-
-* [ ] **비행 감지**
-
-  설명: 플레이어가 아무 아이템의 도움 없이 비행하는지 감지 (해결 대기 중, 현재 아이디어 없음)
-
-### 기타 기능
-
-- **방 이름 접두사**
-
-  설명: 기본값은 AC로, 방에서 안티치트를 사용함을 표시합니다. 설정을 수정하여 표시를 변경하거나 비워서 표시를 취소할 수 있습니다.
-
-- **게임 참가 알림**
-
-  설명: 게임 원본의 참가 알림이 너무 혼란스러워서 안티치트에서 원본 참가 알림을 취소했습니다. 설정에서 플레이어 게임 참가 알림을 사용자 정의할 수 있습니다.
-
-- **플레이어 조작 정보**
-
-  설명: 플레이어 조작 정보를 표시합니다 (방 참가/아이템 구매/행성 전환/전원 제거)
-
-- **클라이언트 설정 차이 허용**
-
-  설명: 클라이언트에 모드 차이가 있어도 허용하여 클라이언트가 방에 참가하지 못하는 문제를 완화하는 데 도움이 됩니다
+오탐이 발생하면 BepInEx와 AstaAntiCheat만 활성화한 별도 프로필에서 재현되는지 확인해 주세요. [문제 제보](https://github.com/P-Asta/AntiCheat/issues)에는 재현 순서, 게임·모드 버전, 관련 설정과 로그를 함께 남겨 주세요.
 
 ## 기여
 
-<a href="https://github.com/chuxiaaaa/AntiCheat/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=chuxiaaaa/AntiCheat" />
-</a>
+버그 제보, 번역, 풀 리퀘스트를 환영합니다. 기술적인 내용은 [아이템 획득 검증 분석](grab-validation-audit-ko.md)과 [요청 검증·질주 관찰 분석](rpc-validation-audit-ko.md)에 정리되어 있습니다. 회귀 테스트 프로젝트는 [tests](../tests/)에서 확인할 수 있습니다.
 
-### 게임 언어
+## 기여자
 
-- 중국어 (chuxiaaaa & CoolLKKPS)
-- 영어 (DeathWrench & CoolLKKPS & glyphical)
-- 한국어 (P-Asta)
+- 원본 개발: [chuxiaaaa/AntiCheat](https://github.com/chuxiaaaa/AntiCheat) 및 [원본 기여자](https://github.com/chuxiaaaa/AntiCheat/graphs/contributors)
+- 포크 관리 및 한국어 번역: [P-Asta](https://github.com/P-Asta)
+- 게임 번역: 중국어 — chuxiaaaa, CoolLKKPS / 영어 — DeathWrench, CoolLKKPS, glyphical / 한국어 — P-Asta
+- 원본 README 번역: 중국어 — chuxiaaaa, CoolLKKPS / 영어 — NilaierMusic, CoolLKKPS / 러시아어 — NilaierMusic / 한국어 — P-Asta
 
-### README 언어
+원본 테스터: 超级骇人鲸, Alan Backer, 沈阳最速傳說疾走の猛虎！貴物刀一郎, 柒小鸭 yz, 喜欢睡觉の极茶龙, 东南枝, Melissa, 我不吃牛肉.
 
-- 중국어 (chuxiaaaa & CoolLKKPS)
-- 영어 (NilaierMusic & CoolLKKPS)
-- 러시아어 (NilaierMusic)
-- 한국어 (P-Asta)
-
-### 모드 테스터
-
-- 超级骇人鲸
-- Alan Backer
-- 沈阳最速傳說疾走の猛虎！貴物刀一郎
-- 柒小鸭 yz
-- 喜欢睡觉の极茶龙
-- 东南枝
-- Melissa
-- 我不吃牛肉
-
-능력 있는 개발자 여러분의 모드 기여를 환영합니다~
-
-## 피드백
-
-오탐지가 발생하고 모드로 인한 것이 아님을 확신한다면, 문제 재현 방법을 설명하는 issue를 제출하여 문제 해결에 도움을 주세요!
-
-## 비호환성
-
-클라이언트 플레이어가 다음 모드를 단독으로 사용하면 안티치트에서 맨손으로 피해를 입히는 것으로 감지됩니다:
-
-- GeneralImprovements
-- ScrollFix
-- OrbitRecharge
+원본의 [중국어](README-zh-CN.md)와 [러시아어](README-ru.md) 문서도 보존하고 있습니다.
